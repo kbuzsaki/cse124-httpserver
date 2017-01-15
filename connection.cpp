@@ -31,7 +31,8 @@ SocketListener::SocketListener(uint16_t port) {
 }
 
 SocketListener::~SocketListener() {
-    close(this->sock);
+    ::shutdown(this->sock, SHUT_RDWR);
+    ::close(this->sock);
 }
 
 void SocketListener::listen() {
