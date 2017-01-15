@@ -27,3 +27,9 @@
 *.exe
 *.out
 *.app
+
+# misc extra
+httpd
+httpd.dSYM
+CMakeLists.txt
+files
