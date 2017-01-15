@@ -10,6 +10,7 @@ using std::endl;
 using std::string;
 using std::stringstream;
 
+#define INVALID_SOCK (-1)
 #define QUEUE_SIZE (100)
 #define BUFFER_SIZE (2000)
 
@@ -53,24 +54,40 @@ BufferedConnection SocketListener::accept() {
     return BufferedConnection(client_sock);
 }
 
+BufferedConnection::BufferedConnection() : client_sock(INVALID_SOCK) {}
 
-BufferedConnection::BufferedConnection(int client_sock) {
-    this->client_sock = client_sock;
-}
+BufferedConnection::BufferedConnection(int client_sock) : client_sock(client_sock) {}
 
-BufferedConnection::BufferedConnection(const BufferedConnection & con) {
-    this->client_sock = con.client_sock;
-    this->buffer.str(con.buffer.str());
+BufferedConnection::BufferedConnection(BufferedConnection&& conn) : client_sock(conn.client_sock), buffer(conn.buffer.str()) {
+    conn.client_sock = INVALID_SOCK;
 }
 
 BufferedConnection::~BufferedConnection() {
-    close(this->client_sock);
+    this->close();
+}
+
+bool BufferedConnection::is_closed() {
+    return this->client_sock == INVALID_SOCK;
+}
+
+void BufferedConnection::close() {
+    if (!this->is_closed()) {
+        if (::shutdown(this->client_sock, SHUT_RDWR) < 0) {
+            cerr << "shutdown() failed: " << strerror(errno) << endl;
+        }
+        if (::close(this->client_sock) < 0) {
+            cerr << "close() failed: " << strerror(errno) << endl;
+        }
+    }
 }
 
 void BufferedConnection::write(string body) {
-    send(this->client_sock, body.c_str(), body.size(), 0);
+    if (!this->is_closed()) {
+        send(this->client_sock, body.c_str(), body.size(), 0);
+    }
 }
 
+// TODO: fix this to handle being closed
 string BufferedConnection::read_until(string sep) {
     // if the separator is already in the buffer, return from the buffer
     size_t pos = this->buffer.str().find(sep, 0);

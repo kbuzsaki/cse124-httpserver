@@ -13,6 +13,7 @@ class SocketListener {
 public:
     SocketListener(uint16_t port);
     ~SocketListener();
+    
     void listen();
     BufferedConnection accept();
 };
@@ -22,9 +23,13 @@ class BufferedConnection {
     std::stringstream buffer;
     
 public:
+    BufferedConnection();
     BufferedConnection(int client_sock);
-    BufferedConnection(const BufferedConnection&);
+    BufferedConnection(BufferedConnection&&);
     ~BufferedConnection();
+    
+    bool is_closed();
+    void close();
     void write(std::string body);
     std::string read_until(std::string sep);
 };
