@@ -10,6 +10,8 @@ class TestRunner {
     vector<string> messages;
     
 public:
+    TestRunner() : passes(0), fails(0), messages() {}
+    
     void pass() {
         passes++;
     }

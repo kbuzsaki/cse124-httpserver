@@ -1,3 +1,4 @@
+#include <string.h>
 #include <unistd.h>
 #include <iostream>
 #include <sys/socket.h>
