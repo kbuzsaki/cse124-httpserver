@@ -31,5 +31,7 @@
 # misc extra
 httpd
 httpd.dSYM
+test_httpd
+test_httpd.dSYM
 CMakeLists.txt
 files
