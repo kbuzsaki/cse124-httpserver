@@ -1,6 +1,7 @@
 #include <iostream>
 #include "httpd.h"
 #include "connection.h"
+#include "http.h"
 
 using std::cerr;
 using std::cout;
@@ -17,15 +18,21 @@ void start_httpd(unsigned short port, string doc_root) {
     listener.listen();
 
     while (true) {
-        BufferedConnection connection = listener.accept();
+        HttpConnection connection(listener.accept());
 
-        string received = "";
-        do {
-            received = connection.read_until("\n");
-            cout << received;
-            connection.write(received);
-        } while(received.size() > 0);
+        HttpRequest request = connection.read_request();
+        cout << "method: '" << request.method << "'" << endl;
+        cout << "uri: '" << request.uri << "'" << endl;
+        cout << "version: '" << request.version << "'" << endl;
+        cout << "headers:" << endl;
+        for (size_t i = 0; i < request.headers.size(); i++) {
+            cout << request.headers[i].key << ": " << request.headers[i].value << endl;
+        }
+        cout << endl;
         
-        cout << "client finished sending" << endl;
+        HttpResponse response;
+        connection.write_response(response);
+        
+        cout << "client finished sending" << endl << endl;
     }
 }

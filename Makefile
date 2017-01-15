@@ -2,8 +2,8 @@
 CC=g++
 CFLAGS=-std=c++11 -ggdb -Wall -Wextra -pedantic -Werror
 CXXFLAGS=-std=c++11
-DEPS = httpd.h connection.h util.h
-SRCS = httpd.cpp connection.cpp util.cpp
+DEPS = httpd.h connection.h util.h http.h
+SRCS = httpd.cpp connection.cpp util.cpp http.cpp
 MAIN_SRCS = main.c $(SRCS)
 MAIN_OBJS = $(MAIN_SRCS:.c=.o)
 TEST_SRCS = test.c $(SRCS)
