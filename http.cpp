@@ -10,6 +10,28 @@ using std::vector;
 #define NUM_REQUEST_PARTS (3)
 #define NUM_HEADER_PARTS (2)
 
+#define SEPARATOR ("\r\n")
+
+HttpResponse not_found_response() {
+    HttpResponse response;
+    response.version = HTTP_VERSION_1_1;
+    response.status = NOT_FOUND_STATUS;
+    response.headers.push_back(HttpHeader{"Server", "TritonHTTP/0.1"});
+    response.headers.push_back(HttpHeader{"Content-Length", "0"});
+    response.body = "";
+    return response;
+}
+
+HttpResponse internal_server_error_response() {
+    HttpResponse response;
+    response.version = HTTP_VERSION_1_1;
+    response.status = INTERNAL_SERVER_ERROR_STATUS;
+    response.headers.push_back(HttpHeader{"Server", "TritonHTTP/0.1"});
+    response.headers.push_back(HttpHeader{"Content-Length", "0"});
+    response.body = "";
+    return response;
+}
+
 vector<HttpHeader> parse_headers(const vector<string>&);
 
 HttpConnection::HttpConnection(BufferedConnection&& conn) : conn(std::move(conn)) {}
@@ -35,9 +57,17 @@ HttpRequest HttpConnection::read_request() {
     return request;
 }
 
-
-void HttpConnection::write_response(HttpResponse) {
-    conn.write("HTTP/1.1 500 Internal Server Error\r\n\r\n");
+void HttpConnection::write_response(HttpResponse response) {
+    stringstream resp;
+    
+    resp << response.version << " " << response.status.code << " " << response.status.name << SEPARATOR;
+    for (size_t i = 0; i < response.headers.size(); i++) {
+        resp << response.headers[i].key << ": " << response.headers[i].value << SEPARATOR;
+    }
+    resp << SEPARATOR;
+    resp << response.body;
+    
+    conn.write(resp.str());
 }
 
 vector<HttpHeader> parse_headers(const vector<string>& lines) {
@@ -62,3 +92,4 @@ vector<HttpHeader> parse_headers(const vector<string>& lines) {
     
     return headers;
 }
+

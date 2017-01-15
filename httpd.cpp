@@ -29,9 +29,13 @@ void start_httpd(unsigned short port, string doc_root) {
             cout << request.headers[i].key << ": " << request.headers[i].value << endl;
         }
         cout << endl;
-        
-        HttpResponse response;
-        connection.write_response(response);
+
+        if (request.uri == "/shutdown") {
+            connection.write_response(internal_server_error_response());
+            return;
+        } else {
+            connection.write_response(not_found_response());
+        }
         
         cout << "client finished sending" << endl << endl;
     }
