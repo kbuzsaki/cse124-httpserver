@@ -1,7 +1,7 @@
 
 CC=g++
-CFLAGS=-std=c++11 -ggdb -Wall -Wextra -pedantic -Werror
-CXXFLAGS=-std=c++11
+CFLAGS=-std=c++0x -ggdb -Wall -Wextra -pedantic -Werror
+CXXFLAGS=-std=c++0x
 DEPS = httpd.h connection.h util.h http.h
 SRCS = httpd.cpp connection.cpp util.cpp http.cpp
 MAIN_SRCS = main.c $(SRCS)
@@ -16,6 +16,9 @@ default: httpd
 
 httpd:    $(MAIN_OBJS)
 	$(CC) $(CFLAGS) -o httpd $(MAIN_OBJS) -lpthread
+
+run: httpd
+	./httpd 6060 files
 
 test_httpd: $(TEST_OBJS)
 	$(CC) $(CFLAGS) -o test_httpd $(TEST_OBJS) -lpthread
