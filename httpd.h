@@ -3,8 +3,6 @@
 
 #include <string>
 
-using namespace std;
-
-void start_httpd(unsigned short port, string doc_root);
+void start_httpd(unsigned short port, std::string doc_root);
 
 #endif // HTTPD_H
