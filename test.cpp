@@ -4,19 +4,6 @@
 
 using namespace std;
 
-template <typename T>
-ostream& operator<<(ostream& os, const vector<T>& v) {
-    os << "[";
-    for (size_t i = 0; i < v.size(); i++) {
-        if (i == 0) {
-            os << "'" << v[i] << "'";
-        } else {
-            os << ", '" << v[i] << "'";
-        }
-    }
-    return os << "]";
-}
-
 class TestRunner {
     int passes;
     int fails;

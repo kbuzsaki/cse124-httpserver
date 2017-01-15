@@ -6,6 +6,19 @@
 #include <sstream>
 #include <vector>
 
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
+    os << "[";
+    for (size_t i = 0; i < v.size(); i++) {
+        if (i == 0) {
+            os << "'" << v[i] << "'";
+        } else {
+            os << ", '" << v[i] << "'";
+        }
+    }
+    return os << "]";
+}
+
 std::vector<std::string> split(std::string s, std::string sep);
 
 std::vector<std::string> split_n(std::string s, std::string sep, int n_splits);
