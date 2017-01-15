@@ -34,4 +34,5 @@ httpd.dSYM
 test_httpd
 test_httpd.dSYM
 CMakeLists.txt
+cmake-build-debug/
 files
