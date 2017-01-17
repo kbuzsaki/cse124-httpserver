@@ -16,6 +16,8 @@ using std::stringstream;
 #define QUEUE_SIZE (100)
 #define BUFFER_SIZE (2000)
 
+// TODO: add proper error handling via exceptions when connection stuff fails
+
 SocketListener::SocketListener(uint16_t port) {
     this->sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
