@@ -3,6 +3,7 @@
 #include "http.h"
 #include "util.h"
 
+using std::ostream;
 using std::string;
 using std::stringstream;
 using std::vector;
@@ -11,6 +12,14 @@ using std::vector;
 #define NUM_HEADER_PARTS (2)
 
 #define CRLF ("\r\n")
+
+ostream& operator<<(ostream& os, const HttpHeader& header) {
+    return os << header.key << ": " << header.value;
+}
+
+bool operator==(const HttpHeader& lhs, const HttpHeader& rhs) {
+    return lhs.key == rhs.key && lhs.value == rhs.value;
+}
 
 HttpResponse not_found_response() {
     HttpResponse response;

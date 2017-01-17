@@ -18,6 +18,8 @@ struct HttpHeader {
     std::string key;
     std::string value;
 };
+std::ostream& operator<<(std::ostream&, const HttpHeader&);
+bool operator==(const HttpHeader&, const HttpHeader&);
 
 struct HttpRequest {
     std::string method;

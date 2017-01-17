@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include "connection.h"
+#include "http.h"
 #include "util.h"
 
 using namespace std;
@@ -153,12 +155,35 @@ void test_buffered_connection(TestRunner& runner) {
     }
 }
 
+// TODO: test failure cases
+void test_http_connection(TestRunner& runner) {
+    MockConnection* mock_conn = new MockConnection("GET /foo/bar/baz?param HTTP/0.9\r\nHost: example.com\r\nMyHeader: my_value\r\n\r\n");
+    HttpConnection request_conn((BufferedConnection(mock_conn)));
+    HttpRequest request = request_conn.read_request();
+    runner.assert_equal(string("GET"), request.method, "incorrect request http method");
+    runner.assert_equal(string("/foo/bar/baz?param"), request.uri, "incorrect request uri");
+    runner.assert_equal(string(HTTP_VERSION_0_9), request.version, "incorrect request http version");
+    runner.assert_equal(vector<HttpHeader>{{"Host", "example.com"}, {"MyHeader", "my_value"}}, request.headers, "incorrect request headers");
+    runner.assert_equal(string(""), request.body, "incorrect request body");
+    runner.assert_equal(string(""), mock_conn->written(), "http conn wrote to socket before write was called");
+
+    // TODO: test body with \r\n sequence
+    HttpResponse response;
+    response.version = HTTP_VERSION_1_1;
+    response.status = OK_STATUS;
+    response.headers = vector<HttpHeader>{{"Server", "SomeServer"}, {"SomeHeader", "some_value"}};
+    response.body = "foobar baz\ndog";
+    request_conn.write_response(response);
+    runner.assert_equal(string("HTTP/1.1 200 OK\r\nServer: SomeServer\r\nSomeHeader: some_value\r\n\r\nfoobar baz\ndog"), mock_conn->written(), "incorrect response");
+}
+
 int main(int argc, char* argv[]) {
     TestRunner runner;
 
     test_split(runner);
     test_mock_connection(runner);
     test_buffered_connection(runner);
+    test_http_connection(runner);
 
     runner.print_results(cout);
     return 0;
