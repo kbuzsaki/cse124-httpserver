@@ -34,9 +34,16 @@ SocketListener::SocketListener(uint16_t port) {
     }
 }
 
+SocketListener::SocketListener(SocketListener&& listener) : sock(listener.sock) {
+    listener.sock = INVALID_SOCK;
+}
+
 SocketListener::~SocketListener() {
-    ::shutdown(this->sock, SHUT_RDWR);
-    ::close(this->sock);
+    // TODO: add a proper notion of "closed" to socket listener
+    if (sock != INVALID_SOCK) {
+        ::shutdown(this->sock, SHUT_RDWR);
+        ::close(this->sock);
+    }
 }
 
 void SocketListener::listen() {

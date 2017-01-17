@@ -12,6 +12,7 @@ class SocketListener {
 
 public:
     SocketListener(uint16_t port);
+    SocketListener(SocketListener&&);
     ~SocketListener();
 
     void listen();
