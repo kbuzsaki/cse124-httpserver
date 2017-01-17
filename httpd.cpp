@@ -28,6 +28,7 @@ void start_httpd(unsigned short port, string doc_root) {
         for (size_t i = 0; i < request.headers.size(); i++) {
             cout << request.headers[i].key << ": " << request.headers[i].value << endl;
         }
+        cout << "body: '" << request.body << "'" << endl;
         cout << endl;
 
         if (request.uri == "/shutdown") {
