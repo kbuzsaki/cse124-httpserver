@@ -120,11 +120,6 @@ vector<HttpHeader> parse_headers(const vector<string>& lines) {
     vector<HttpHeader> headers;
 
     for (size_t i = 0; i < lines.size(); i++) {
-        // TODO: fix this happening
-        if (lines[i] == "") {
-            continue;
-        }
-
         vector<string> parts = split_n(lines[i], ": ", NUM_HEADER_PARTS - 1);
         if (parts.size() != NUM_HEADER_PARTS) {
             stringstream error;
