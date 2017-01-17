@@ -8,6 +8,7 @@
 
 using std::cerr;
 using std::endl;
+using std::ios;
 using std::string;
 using std::stringstream;
 
@@ -53,26 +54,41 @@ BufferedConnection SocketListener::accept() {
         cerr << "accept() failed: " << strerror(errno) << endl;
     }
 
-    return BufferedConnection(client_sock);
+    return BufferedConnection(new SocketConnection(client_sock));
 }
 
-BufferedConnection::BufferedConnection() : client_sock(INVALID_SOCK) {}
+SocketConnection::SocketConnection() : client_sock(INVALID_SOCK) {}
 
-BufferedConnection::BufferedConnection(int client_sock) : client_sock(client_sock) {}
+SocketConnection::SocketConnection(int client_sock) : client_sock(client_sock) {}
 
-BufferedConnection::BufferedConnection(BufferedConnection&& conn) : client_sock(conn.client_sock), buffer(conn.buffer.str()) {
+SocketConnection::SocketConnection(SocketConnection&& conn) : client_sock(conn.client_sock) {
     conn.client_sock = INVALID_SOCK;
 }
 
-BufferedConnection::~BufferedConnection() {
+SocketConnection::~SocketConnection() {
     this->close();
 }
 
-bool BufferedConnection::is_closed() {
-    return this->client_sock == INVALID_SOCK;
+string SocketConnection::read() {
+    char buf[BUFFER_SIZE];
+
+    ssize_t received = ::recv(client_sock, buf, sizeof(buf), 0);
+    if (received < 0) {
+        cerr << "recv() failed: " << strerror(errno) << endl;
+        return "";
+    }
+
+    buf[received] = '\0';
+    return string(buf);
 }
 
-void BufferedConnection::close() {
+void SocketConnection::write(std::string s) {
+    if (!this->is_closed()) {
+        ::send(this->client_sock, s.c_str(), s.size(), 0);
+    }
+}
+
+void SocketConnection::close() {
     if (!this->is_closed()) {
         if (::shutdown(this->client_sock, SHUT_RDWR) < 0) {
             cerr << "shutdown() failed: " << strerror(errno) << endl;
@@ -80,45 +96,67 @@ void BufferedConnection::close() {
         if (::close(this->client_sock) < 0) {
             cerr << "close() failed: " << strerror(errno) << endl;
         }
+        this->client_sock = INVALID_SOCK;
     }
 }
 
-void BufferedConnection::write(string body) {
-    if (!this->is_closed()) {
-        send(this->client_sock, body.c_str(), body.size(), 0);
+bool SocketConnection::is_closed() {
+    return this->client_sock == INVALID_SOCK;
+}
+
+BufferedConnection::BufferedConnection() : conn(NULL), buffer() {}
+
+BufferedConnection::BufferedConnection(Connection* conn) : conn(conn), buffer() {}
+
+BufferedConnection::BufferedConnection(BufferedConnection&& conn) : conn(conn.conn), buffer(conn.buffer.str()) {
+    conn.conn = NULL;
+}
+
+BufferedConnection::~BufferedConnection() {
+    this->close();
+    delete this->conn;
+}
+
+bool BufferedConnection::is_closed() {
+    // TODO: is this acceptable behavior?
+    return conn == NULL || conn->is_closed();
+}
+
+void BufferedConnection::close() {
+    // TODO: is this acceptable behavior?
+    if (!is_closed()) {
+        conn->close();
     }
 }
 
-// TODO: fix this to handle being closed
+void BufferedConnection::write(string s) {
+    conn->write(s);
+}
+
 string BufferedConnection::read_until(string sep) {
-    // if the separator is already in the buffer, return from the buffer
+    // first try to read from the buffer by checking for the separator
     size_t pos = this->buffer.str().find(sep, 0);
     if (pos != string::npos) {
-        return pop_n_sstream(this->buffer, pos + sep.size());
+        return pop_n_sstream(this->buffer, pos, sep.size());
     }
-    
-    // otherwise, read more from the socket
-    char buf[BUFFER_SIZE];
-    ssize_t received = 0;
+
+    // otherwise, read more from the inner connection
+    string buf_str;
     do {
-        received = recv(client_sock, buf, sizeof(buf), 0);
-        buf[received] = '\0';
-        string buf_str = string(buf);
-        
-        size_t buf_pos = buf_str.find(sep, 0);
-        if (buf_pos != string::npos) {
-            size_t split_pos = sstream_size(this->buffer) + buf_pos;
-            this->buffer << buf_str;
-            return pop_n_sstream(this->buffer, split_pos);
-        } else {
-            this->buffer << buf_str;
+        buf_str = conn->read();
+        this->buffer.seekp(0, ios::end);
+        this->buffer << buf_str;
+
+        // TODO: maybe optimize this?
+        size_t split_pos = this->buffer.str().find(sep, 0);
+        if (split_pos != string::npos) {
+            return pop_n_sstream(this->buffer, split_pos, sep.size());
         }
-    } while (received > 0);
-    
-    return pop_n_sstream(this->buffer, sstream_size(this->buffer));
+    } while (buf_str != "");
+
+    // if we get a failed read (empty string), just give up and return what's in the buffer
+    return pop_n_sstream(this->buffer, sstream_size(this->buffer), 0);
 }
-
-
 
 
 
