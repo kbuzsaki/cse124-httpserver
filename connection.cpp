@@ -57,6 +57,7 @@ BufferedConnection SocketListener::accept() {
     return BufferedConnection(new SocketConnection(client_sock));
 }
 
+
 SocketConnection::SocketConnection() : client_sock(INVALID_SOCK) {}
 
 SocketConnection::SocketConnection(int client_sock) : client_sock(client_sock) {}
@@ -103,6 +104,7 @@ void SocketConnection::close() {
 bool SocketConnection::is_closed() {
     return this->client_sock == INVALID_SOCK;
 }
+
 
 BufferedConnection::BufferedConnection() : conn(NULL), buffer() {}
 

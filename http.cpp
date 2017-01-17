@@ -13,6 +13,9 @@ using std::vector;
 
 #define CRLF ("\r\n")
 
+vector<HttpHeader> parse_headers(const vector<string>&);
+
+
 ostream& operator<<(ostream& os, const HttpHeader& header) {
     return os << header.key << ": " << header.value;
 }
@@ -20,6 +23,7 @@ ostream& operator<<(ostream& os, const HttpHeader& header) {
 bool operator==(const HttpHeader& lhs, const HttpHeader& rhs) {
     return lhs.key == rhs.key && lhs.value == rhs.value;
 }
+
 
 HttpResponse not_found_response() {
     HttpResponse response;
@@ -41,7 +45,6 @@ HttpResponse internal_server_error_response() {
     return response;
 }
 
-vector<HttpHeader> parse_headers(const vector<string>&);
 
 HttpConnection::HttpConnection(BufferedConnection&& conn) : conn(std::move(conn)) {}
 
@@ -115,6 +118,7 @@ void HttpConnection::write_response(HttpResponse response) {
 
     this->write_frame(frame);
 }
+
 
 vector<HttpHeader> parse_headers(const vector<string>& lines) {
     vector<HttpHeader> headers;
