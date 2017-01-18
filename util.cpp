@@ -8,8 +8,6 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
-#define DEFAULT_READ_SIZE (100)
-#define BUFFER_SIZE (5000)
 
 vector<string> split(string s, string sep) {
     return split_n(s, sep, -1);
@@ -58,59 +56,4 @@ size_t sstream_size(std::stringstream& buffer) {
 }
 
 
-MockConnection::MockConnection(string payload) : read_payload(payload), write_payload(), read_size(DEFAULT_READ_SIZE), closed(false) {}
 
-MockConnection::MockConnection(string payload, int read_size) : read_payload(payload), write_payload(), read_size(read_size), closed(false) {}
-
-MockConnection::~MockConnection() {}
-
-// TODO: make closed make these fail
-std::string MockConnection::read() {
-    char buf[BUFFER_SIZE];
-
-    read_payload.read(buf, read_size);
-    buf[read_payload.gcount()] = '\0';
-
-    return string(buf);
-}
-
-void MockConnection::write(std::string s) {
-    this->write_payload << s;
-}
-
-void MockConnection::close() {
-    closed = true;
-}
-
-bool MockConnection::is_closed() {
-    return closed;
-}
-
-std::string MockConnection::written() {
-    return write_payload.str();
-}
-
-
-MockListener::MockListener(std::vector<Connection*> connections) : connections(connections) {}
-
-MockListener::~MockListener() {}
-
-void MockListener::listen() { /* NOOP */ }
-
-Connection* MockListener::accept() {
-    Connection* conn = connections.at(connections.size() - 1);
-    connections.pop_back();
-    return conn;
-}
-
-
-MockHttpHandler::MockHttpHandler(const HttpResponse &response) : response_payload(response), request_copy() {}
-
-HttpResponse MockHttpHandler::handle_request(const HttpRequest& request) {
-    request_copy = request;
-    return response_payload;
-}
-
-HttpRequest MockHttpHandler::request() {
-    return request_copy;
-}

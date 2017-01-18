@@ -2,6 +2,7 @@
 #include <vector>
 #include "connection.h"
 #include "http.h"
+#include "mocks.h"
 #include "server.h"
 #include "util.h"
 
