@@ -46,7 +46,7 @@ HttpResponse internal_server_error_response() {
 }
 
 
-HttpConnection::HttpConnection(BufferedConnection&& conn) : conn(std::move(conn)) {}
+HttpConnection::HttpConnection(Connection* conn) : conn(conn) {}
 
 HttpFrame HttpConnection::read_frame() {
     HttpFrame frame;

@@ -36,7 +36,7 @@ public:
     virtual ~MockListener();
 
     virtual void listen();
-    virtual BufferedConnection accept();
+    virtual Connection* accept();
 };
 
 class MockConnection : public Connection {

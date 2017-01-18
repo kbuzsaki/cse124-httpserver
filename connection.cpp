@@ -54,7 +54,7 @@ void SocketListener::listen() {
     }
 }
 
-BufferedConnection SocketListener::accept() {
+Connection* SocketListener::accept() {
     struct sockaddr_in client_addr;
     unsigned int client_len = sizeof(client_addr);
 
@@ -63,7 +63,7 @@ BufferedConnection SocketListener::accept() {
         cerr << "accept() failed: " << strerror(errno) << endl;
     }
 
-    return BufferedConnection(new SocketConnection(client_sock));
+    return new SocketConnection(client_sock);
 }
 
 

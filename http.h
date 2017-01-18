@@ -57,7 +57,7 @@ class HttpConnection {
     void write_frame(HttpFrame frame);
 
 public:
-    HttpConnection(BufferedConnection&& conn);
+    HttpConnection(Connection* conn);
     HttpRequest read_request();
     void write_response(HttpResponse);
 };

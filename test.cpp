@@ -158,7 +158,7 @@ void test_buffered_connection(TestRunner& runner) {
 // TODO: test failure cases
 void test_http_connection(TestRunner& runner) {
     MockConnection* mock_conn = new MockConnection("GET /foo/bar/baz?param HTTP/0.9\r\nHost: example.com\r\nMyHeader: my_value\r\n\r\n");
-    HttpConnection request_conn((BufferedConnection(mock_conn)));
+    HttpConnection request_conn(mock_conn);
     HttpRequest request = request_conn.read_request();
     runner.assert_equal(string("GET"), request.method, "incorrect request http method");
     runner.assert_equal(string("/foo/bar/baz?param"), request.uri, "incorrect request uri");

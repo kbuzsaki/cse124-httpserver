@@ -97,8 +97,8 @@ MockListener::~MockListener() {}
 
 void MockListener::listen() { /* NOOP */ }
 
-BufferedConnection MockListener::accept() {
+Connection* MockListener::accept() {
     Connection* conn = connections.at(connections.size() - 1);
     connections.pop_back();
-    return BufferedConnection(conn);
+    return conn;
 }

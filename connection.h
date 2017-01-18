@@ -5,14 +5,14 @@
 #include <string>
 #include <sstream>
 
-class BufferedConnection;
+class Connection;
 
 class Listener {
 public:
     virtual ~Listener() {};
 
     virtual void listen() = 0;
-    virtual BufferedConnection accept() = 0;
+    virtual Connection* accept() = 0;
 };
 
 class Connection {
@@ -35,7 +35,7 @@ public:
     ~SocketListener();
 
     void listen();
-    BufferedConnection accept();
+    Connection* accept();
 };
 
 class SocketConnection : public Connection {
