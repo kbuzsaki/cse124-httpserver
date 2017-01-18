@@ -2,6 +2,7 @@
 #include <vector>
 #include "connection.h"
 #include "http.h"
+#include "server.h"
 #include "util.h"
 
 using namespace std;
@@ -177,13 +178,57 @@ void test_http_connection(TestRunner& runner) {
     runner.assert_equal(string("HTTP/1.1 200 OK\r\nServer: SomeServer\r\nSomeHeader: some_value\r\n\r\nfoobar baz\ndog"), mock_conn->written(), "incorrect response");
 }
 
-int main(int argc, char* argv[]) {
+void test_http_listener(TestRunner& runner) {
+    MockConnection* mock_conn_1 = new MockConnection("GET /foo/bar HTTP/1.0\r\nMyHeader: myval\r\n\r\n");
+    MockConnection* mock_conn_2 = new MockConnection("GET / HTTP/1.1\r\nMyHeader: myval2\r\n\r\n");
+    MockConnection* mock_conn_3 = new MockConnection("GET /foo/bar/baz HTTP/0.9\r\nMyHeader: myval3\r\n\r\n");
+    MockListener* mock_listener = new MockListener(vector<Connection*> {mock_conn_3, mock_conn_2, mock_conn_1});
+    HttpListener http_listener(mock_listener);
+
+    HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"KEY", "VAL"}}, ""};
+    string response_str("HTTP/1.1 200 OK\r\nKEY: VAL\r\n\r\n");
+
+    // TODO: test failure before listen?
+    http_listener.listen();
+
+    // chunk in blocks to guard against mistakes due to similar variable names
+    {
+        HttpConnection conn_1 = http_listener.accept();
+        HttpRequest request_1 = conn_1.read_request();
+        runner.assert_equal(string("GET"), request_1.method, "wrong first request method");
+        runner.assert_equal(string("/foo/bar"), request_1.uri, "wrong first request uri");
+        runner.assert_equal(HTTP_VERSION_1_0, request_1.version, "wrong first request version");
+        conn_1.write_response(response);
+        runner.assert_equal(response_str, mock_conn_1->written(), "wrong first response");
+    } {
+        HttpConnection conn_2 = http_listener.accept();
+        HttpRequest request_2 = conn_2.read_request();
+        runner.assert_equal(string("GET"), request_2.method, "wrong second request method");
+        runner.assert_equal(string("/"), request_2.uri, "wrong second request uri");
+        runner.assert_equal(HTTP_VERSION_1_1, request_2.version, "wrong second request version");
+        conn_2.write_response(response);
+        runner.assert_equal(response_str, mock_conn_2->written(), "wrong second response");
+    } {
+        HttpConnection conn_3 = http_listener.accept();
+        HttpRequest request_3 = conn_3.read_request();
+        runner.assert_equal(string("GET"), request_3.method, "wrong third request method");
+        runner.assert_equal(string("/foo/bar/baz"), request_3.uri, "wrong third request uri");
+        runner.assert_equal(HTTP_VERSION_0_9, request_3.version, "wrong third request version");
+        conn_3.write_response(response);
+        runner.assert_equal(response_str, mock_conn_3->written(), "wrong third response");
+    } {
+        // TODO: test accept when no more connections are remaining?
+    }
+}
+
+int main() {
     TestRunner runner;
 
     test_split(runner);
     test_mock_connection(runner);
     test_buffered_connection(runner);
     test_http_connection(runner);
+    test_http_listener(runner);
 
     runner.print_results(cout);
     return 0;
