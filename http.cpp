@@ -153,6 +153,9 @@ HttpResponse internal_server_error_response() {
 }
 
 
+HttpRequestParseError::HttpRequestParseError(string message) : runtime_error(message) {}
+
+
 HttpConnection::HttpConnection(Connection* conn) : conn(conn) {}
 
 HttpFrame HttpConnection::read_frame() {
@@ -187,7 +190,7 @@ HttpRequest HttpConnection::read_request() {
     if (parts.size() != NUM_REQUEST_PARTS) {
         stringstream error;
         error << "malformed http request line '" << frame.initial_line << "' had " << parts.size() << " parts, expected " << NUM_REQUEST_PARTS;
-        throw std::runtime_error(error.str());
+        throw HttpRequestParseError(error.str());
     }
     request.method = parts[0];
     request.uri = parts[1];
@@ -212,7 +215,7 @@ vector<HttpHeader> parse_headers(const vector<string>& lines) {
         if (parts.size() != NUM_HEADER_PARTS) {
             stringstream error;
             error << "malformed http header '" << lines[i] << "' had " << parts.size() << " parts, expected " << NUM_HEADER_PARTS;
-            throw std::runtime_error(error.str());
+            throw HttpRequestParseError(error.str());
         }
 
         HttpHeader header = {parts[0], parts[1]};

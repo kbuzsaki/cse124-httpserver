@@ -216,6 +216,33 @@ void test_http_connection(TestRunner& runner) {
     response.body = "foobar baz\ndog";
     request_conn.write_response(response);
     runner.assert_equal(string("HTTP/1.1 200 OK\r\nServer: SomeServer\r\nSomeHeader: some_value\r\n\r\nfoobar baz\ndog"), mock_conn->written(), "incorrect response");
+
+    MockConnection* empty_mock_conn = new MockConnection("");
+    HttpConnection empty_request_conn(empty_mock_conn);
+    try {
+        empty_request_conn.read_request();
+        runner.fail("failed to raise exception with empty connection");
+    } catch (HttpRequestParseError&) {
+        runner.pass();
+    }
+
+    MockConnection* bad_initial_line_mock_conn = new MockConnection("foo bar\r\n\r\n");
+    HttpConnection bad_initial_line_request_conn(bad_initial_line_mock_conn);
+    try {
+        bad_initial_line_request_conn.read_request();
+        runner.fail("failed to raise exception with bad initial line connection");
+    } catch (HttpRequestParseError&) {
+        runner.pass();
+    }
+
+    MockConnection* bad_header_mock_conn = new MockConnection("GET / HTTP/1.1\r\nfoobar\r\n\r\n");
+    HttpConnection bad_header_request_conn(bad_header_mock_conn);
+    try {
+        bad_header_request_conn.read_request();
+        runner.fail("failed to raise exception with bad header connection");
+    } catch (HttpRequestParseError&) {
+        runner.pass();
+    }
 }
 
 void test_http_listener(TestRunner& runner) {

@@ -1,6 +1,7 @@
 #ifndef HTTP_H
 #define HTTP_H
 
+#include <exception>
 #include <vector>
 #include "connection.h"
 
@@ -71,6 +72,13 @@ bool operator!=(const HttpResponse&, const HttpResponse&);
 
 HttpResponse not_found_response();
 HttpResponse internal_server_error_response();
+
+
+class HttpRequestParseError : public std::runtime_error {
+public:
+    HttpRequestParseError(std::string message);
+};
+
 
 class HttpConnection {
     BufferedConnection conn;
