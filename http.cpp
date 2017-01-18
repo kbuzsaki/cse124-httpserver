@@ -16,12 +16,70 @@ using std::vector;
 vector<HttpHeader> parse_headers(const vector<string>&);
 
 
+std::ostream& operator<<(std::ostream& os, const HttpFrame& frame) {
+    return os << "{'" << frame.initial_line << "', " << frame.header_lines << ", '" << frame.body << "'}";
+}
+
+bool operator==(const HttpFrame& lhs, const HttpFrame& rhs) {
+    return lhs.initial_line == rhs.initial_line && lhs.header_lines == rhs.header_lines && lhs.body == rhs.body;
+}
+
+bool operator!=(const HttpFrame& lhs, const HttpFrame& rhs) {
+    return !(lhs == rhs);
+}
+
+
 ostream& operator<<(ostream& os, const HttpHeader& header) {
-    return os << header.key << ": " << header.value;
+    return os << "'" << header.key << ": " << header.value << "'";
 }
 
 bool operator==(const HttpHeader& lhs, const HttpHeader& rhs) {
     return lhs.key == rhs.key && lhs.value == rhs.value;
+}
+
+bool operator!=(const HttpHeader& lhs, const HttpHeader& rhs) {
+    return !(lhs == rhs);
+}
+
+
+std::ostream& operator<<(std::ostream& os, const HttpRequest& request) {
+    return os << "{'" << request.method << "', '" << request.uri << "', '" << request.version << "', "
+              << request.headers << ", '" << request.body << "'}";
+}
+
+bool operator==(const HttpRequest& lhs, const HttpRequest& rhs) {
+    return lhs.method == rhs.method && lhs.uri == rhs.uri && lhs.version == rhs.version
+           && lhs.headers == rhs.headers && lhs.body == rhs.body;
+}
+
+bool operator!=(const HttpRequest& lhs, const HttpRequest& rhs) {
+    return !(lhs == rhs);
+}
+
+
+std::ostream& operator<<(std::ostream& os, const HttpStatus& status) {
+    return os << "{" << status.code << ", '" << status.name << "'}";
+}
+
+bool operator==(const HttpStatus& lhs, const HttpStatus& rhs) {
+    return lhs.code == rhs.code;
+}
+
+bool operator!=(const HttpStatus& lhs, const HttpStatus& rhs) {
+    return !(lhs == rhs);
+}
+
+
+std::ostream& operator<<(std::ostream& os, const HttpResponse& response) {
+    return os << "{'" << response.version << "', " << response.status << ", " << response.headers << ", '" << response.body << "'}";
+}
+
+bool operator==(const HttpResponse& lhs, const HttpResponse& rhs) {
+    return lhs.version == rhs.version && lhs.status == rhs.status && lhs.headers == rhs.headers && lhs.body == rhs.body;
+}
+
+bool operator!=(const HttpResponse& lhs, const HttpResponse& rhs) {
+    return !(lhs == rhs);
 }
 
 

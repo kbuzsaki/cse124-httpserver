@@ -13,6 +13,9 @@ struct HttpFrame {
     std::vector<std::string> header_lines;
     std::string body;
 };
+std::ostream& operator<<(std::ostream&, const HttpFrame&);
+bool operator==(const HttpFrame&, const HttpFrame&);
+bool operator!=(const HttpFrame&, const HttpFrame&);
 
 struct HttpHeader {
     std::string key;
@@ -20,6 +23,7 @@ struct HttpHeader {
 };
 std::ostream& operator<<(std::ostream&, const HttpHeader&);
 bool operator==(const HttpHeader&, const HttpHeader&);
+bool operator!=(const HttpHeader&, const HttpHeader&);
 
 struct HttpRequest {
     std::string method;
@@ -28,11 +32,17 @@ struct HttpRequest {
     std::vector<HttpHeader> headers;
     std::string body;
 };
+std::ostream& operator<<(std::ostream&, const HttpRequest&);
+bool operator==(const HttpRequest&, const HttpRequest&);
+bool operator!=(const HttpRequest&, const HttpRequest&);
 
 struct HttpStatus {
     int code;
     std::string name;
 };
+std::ostream& operator<<(std::ostream&, const HttpStatus&);
+bool operator==(const HttpStatus&, const HttpStatus&);
+bool operator!=(const HttpStatus&, const HttpStatus&);
 
 const HttpStatus OK_STATUS = HttpStatus{200, "OK"};
 const HttpStatus BAD_REQUEST_STATUS = HttpStatus{400, "Bad Request"};
@@ -46,6 +56,9 @@ struct HttpResponse {
     std::vector<HttpHeader> headers;
     std::string body;
 };
+std::ostream& operator<<(std::ostream&, const HttpResponse&);
+bool operator==(const HttpResponse&, const HttpResponse&);
+bool operator!=(const HttpResponse&, const HttpResponse&);
 
 HttpResponse not_found_response();
 HttpResponse internal_server_error_response();
