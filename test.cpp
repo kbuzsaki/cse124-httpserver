@@ -114,6 +114,27 @@ void test_mock_connection(TestRunner& runner) {
     runner.assert_equal(string(""), full_mock.read(), "failed read of exhausted mock");
 }
 
+void test_mock_listener(TestRunner& runner) {
+    Connection* mock_conn_1 = new MockConnection("1");
+    Connection* mock_conn_2 = new MockConnection("2");
+    Connection* mock_conn_3 = new MockConnection("3");
+    vector<Connection*> connections = {mock_conn_3, mock_conn_2, mock_conn_1};
+    MockListener mock_listener(connections);
+
+    // TODO: test accept before listen?
+    mock_listener.listen();
+
+    runner.assert_equal(mock_conn_1, mock_listener.accept(), "wrong first accepted conn");
+    runner.assert_equal(mock_conn_2, mock_listener.accept(), "wrong second accepted conn");
+    runner.assert_equal(mock_conn_3, mock_listener.accept(), "wrong third accepted conn");
+
+    // TODO: test listen after exhausted
+
+    delete mock_conn_1;
+    delete mock_conn_2;
+    delete mock_conn_3;
+}
+
 void test_buffered_connection(TestRunner& runner) {
     MockConnection* empty_mock = new MockConnection("");
     BufferedConnection empty_buffered(empty_mock);
@@ -226,6 +247,7 @@ int main() {
 
     test_split(runner);
     test_mock_connection(runner);
+    test_mock_listener(runner);
     test_buffered_connection(runner);
     test_http_connection(runner);
     test_http_listener(runner);
