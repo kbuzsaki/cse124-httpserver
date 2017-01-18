@@ -2,6 +2,7 @@
 #include <vector>
 #include "connection.h"
 #include "http.h"
+#include "listener.h"
 #include "mocks.h"
 #include "server.h"
 #include "util.h"
@@ -258,6 +259,24 @@ void test_http_listener(TestRunner& runner) {
     }
 }
 
+void test_http_server(TestRunner&) {
+    HttpRequest request_1{"GET", "/foo/bar", HTTP_VERSION_1_0, vector<HttpHeader>{{"MyHeader", "myval"}}, ""};
+    HttpRequest request_2{"GET", "/", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}}, ""};
+    HttpRequest request_3{"GET", "/foo/bar/baz", HTTP_VERSION_0_9, vector<HttpHeader>{{"MyHeader", "myval3"}}, ""};
+    MockConnection* mock_conn_1 = new MockConnection(request_1.pack().serialize());
+    MockConnection* mock_conn_2 = new MockConnection(request_2.pack().serialize());
+    MockConnection* mock_conn_3 = new MockConnection(request_3.pack().serialize());
+    MockListener* mock_listener = new MockListener(vector<Connection*> {mock_conn_3, mock_conn_2, mock_conn_1});
+
+    HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"OtherKey", "othervalue"}}, ""};
+    HttpHandler* mock_handler = new MockHttpHandler(response);
+
+    HttpServer server(HttpListener(mock_listener), mock_handler);
+
+    // TODO: implement halting of serve() so that assertions can be performed afterwards
+    // server.serve();
+}
+
 int main() {
     TestRunner runner;
 
@@ -268,6 +287,7 @@ int main() {
     test_buffered_connection(runner);
     test_http_connection(runner);
     test_http_listener(runner);
+    test_http_server(runner);
 
     runner.print_results(cout);
     return 0;

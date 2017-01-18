@@ -5,15 +5,6 @@
 #include <string>
 #include <sstream>
 
-class Connection;
-
-class Listener {
-public:
-    virtual ~Listener() {};
-
-    virtual void listen() = 0;
-    virtual Connection* accept() = 0;
-};
 
 class Connection {
 public:
@@ -25,18 +16,6 @@ public:
     virtual bool is_closed() = 0;
 };
 
-
-class SocketListener : public Listener {
-    int sock;
-
-public:
-    SocketListener(uint16_t port);
-    SocketListener(SocketListener&&);
-    ~SocketListener();
-
-    void listen();
-    Connection* accept();
-};
 
 class SocketConnection : public Connection {
     int client_sock;

@@ -1,9 +1,9 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include "connection.h"
 #include "http.h"
 #include "handler.h"
+#include "listener.h"
 
 class HttpListener {
     Listener* listener;
