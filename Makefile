@@ -1,7 +1,7 @@
 
 CC=g++
 CFLAGS=-std=c++0x -ggdb -Wall -Wextra -pedantic -Werror
-CXXFLAGS=-std=c++0x
+CXXFLAGS=$(CFLAGS)
 DEPS = httpd.h connection.h util.h http.h server.h handler.h
 SRCS = httpd.cpp connection.cpp util.cpp http.cpp server.cpp
 MAIN_SRCS = main.c $(SRCS)

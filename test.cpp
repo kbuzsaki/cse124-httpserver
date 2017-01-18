@@ -56,7 +56,7 @@ string itos(int i) {
 }
 
 template <typename T, unsigned int S>
-unsigned int array_size(const T (&arr)[S]) {
+int array_size(const T (&)[S]) {
     return S;
 };
 
