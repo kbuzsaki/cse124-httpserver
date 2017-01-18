@@ -61,7 +61,7 @@ string itos(int i) {
 template <typename T, unsigned int S>
 int array_size(const T (&)[S]) {
     return S;
-};
+}
 
 void test_split(TestRunner& runner) {
     runner.assert_equal(vector<string>{""}, split("", " "), "splitting empty string");
@@ -143,7 +143,7 @@ void test_mock_handler(TestRunner& runner) {
 
     vector<HttpRequest> requests = {
         {"GET", "/foo/bar", HTTP_VERSION_1_1, vector<HttpHeader>{HttpHeader{"SomeKey", "somevalue"}}, ""},
-        {"PUT", "/", HTTP_VERSION_0_9, vector<HttpHeader>{HttpHeader{}}, ""},
+        {"PUT", "/", HTTP_VERSION_0_9, vector<HttpHeader>{}, ""},
         {"GET", "/baz", HTTP_VERSION_1_0, vector<HttpHeader>{HttpHeader{"SomeOtherKey", "othersomevalue"}, HttpHeader{"foo", "bar"}}, ""}
     };
 
