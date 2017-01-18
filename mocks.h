@@ -2,9 +2,9 @@
 #define MOCKS_H
 
 #include "connection.h"
-#include "handler.h"
 #include "http.h"
 #include "listener.h"
+#include "server.h"
 
 
 class MockListener : public Listener {

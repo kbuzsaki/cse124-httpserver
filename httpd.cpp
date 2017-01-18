@@ -2,7 +2,6 @@
 #include "httpd.h"
 #include "connection.h"
 #include "http.h"
-#include "handler.h"
 #include "server.h"
 
 using std::cerr;

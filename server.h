@@ -2,7 +2,6 @@
 #define SERVER_H
 
 #include "http.h"
-#include "handler.h"
 #include "listener.h"
 
 class HttpListener {
@@ -16,6 +15,15 @@ public:
     void listen();
     HttpConnection accept();
 };
+
+
+class HttpHandler {
+public:
+    virtual ~HttpHandler() {};
+
+    virtual HttpResponse handle_request(const HttpRequest&) = 0;
+};
+
 
 class HttpServer {
     HttpListener listener;
