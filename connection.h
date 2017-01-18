@@ -7,16 +7,12 @@
 
 class BufferedConnection;
 
-class SocketListener {
-    int sock;
-
+class Listener {
 public:
-    SocketListener(uint16_t port);
-    SocketListener(SocketListener&&);
-    ~SocketListener();
+    virtual ~Listener() {};
 
-    void listen();
-    BufferedConnection accept();
+    virtual void listen() = 0;
+    virtual BufferedConnection accept() = 0;
 };
 
 class Connection {
@@ -27,6 +23,19 @@ public:
     virtual void write(std::string) = 0;
     virtual void close() = 0;
     virtual bool is_closed() = 0;
+};
+
+
+class SocketListener : public Listener {
+    int sock;
+
+public:
+    SocketListener(uint16_t port);
+    SocketListener(SocketListener&&);
+    ~SocketListener();
+
+    void listen();
+    BufferedConnection accept();
 };
 
 class SocketConnection : public Connection {
@@ -43,6 +52,7 @@ public:
     virtual void close();
     virtual bool is_closed();
 };
+
 
 class BufferedConnection {
     Connection* conn;

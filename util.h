@@ -28,6 +28,17 @@ std::string pop_n_sstream(std::stringstream& buffer, size_t n, size_t discard);
 
 size_t sstream_size(std::stringstream& buffer);
 
+class MockListener : public Listener {
+    std::vector<Connection*> connections;
+
+public:
+    MockListener(std::vector<Connection*> connections);
+    virtual ~MockListener();
+
+    virtual void listen();
+    virtual BufferedConnection accept();
+};
+
 class MockConnection : public Connection {
     std::stringstream read_payload;
     std::stringstream write_payload;

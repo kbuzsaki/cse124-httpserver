@@ -1,15 +1,21 @@
 #include "server.h"
 
-HttpListener::HttpListener(SocketListener&& listener) : listener(std::move(listener)) {}
+HttpListener::HttpListener(Listener* listener) : listener(listener) {}
 
-HttpListener::HttpListener(HttpListener&& listener) : listener(std::move(listener.listener)) {}
+HttpListener::HttpListener(HttpListener&& listener) : listener(listener.listener) {
+    listener.listener = NULL;
+}
+
+HttpListener::~HttpListener() {
+    delete listener;
+}
 
 void HttpListener::listen() {
-    listener.listen();
+    listener->listen();
 }
 
 HttpConnection HttpListener::accept() {
-    return HttpConnection(listener.accept());
+    return HttpConnection(listener->accept());
 }
 
 

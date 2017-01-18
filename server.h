@@ -6,11 +6,12 @@
 #include "handler.h"
 
 class HttpListener {
-    SocketListener listener;
+    Listener* listener;
 
 public:
-    HttpListener(SocketListener&&);
+    HttpListener(Listener*);
     HttpListener(HttpListener&&);
+    ~HttpListener();
 
     void listen();
     HttpConnection accept();

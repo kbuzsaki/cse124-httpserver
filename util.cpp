@@ -89,3 +89,16 @@ bool MockConnection::is_closed() {
 std::string MockConnection::written() {
     return write_payload.str();
 }
+
+
+MockListener::MockListener(std::vector<Connection*> connections) : connections(connections) {}
+
+MockListener::~MockListener() {}
+
+void MockListener::listen() { /* NOOP */ }
+
+BufferedConnection MockListener::accept() {
+    Connection* conn = connections.at(connections.size() - 1);
+    connections.pop_back();
+    return BufferedConnection(conn);
+}
