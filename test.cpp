@@ -200,14 +200,18 @@ void test_http_connection(TestRunner& runner) {
 }
 
 void test_http_listener(TestRunner& runner) {
-    MockConnection* mock_conn_1 = new MockConnection("GET /foo/bar HTTP/1.0\r\nMyHeader: myval\r\n\r\n");
-    MockConnection* mock_conn_2 = new MockConnection("GET / HTTP/1.1\r\nMyHeader: myval2\r\n\r\n");
-    MockConnection* mock_conn_3 = new MockConnection("GET /foo/bar/baz HTTP/0.9\r\nMyHeader: myval3\r\n\r\n");
+    HttpRequest request_1{"GET", "/foo/bar", HTTP_VERSION_1_0, vector<HttpHeader>{{"MyHeader", "myval"}}, ""};
+    HttpRequest request_2{"GET", "/", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}}, ""};
+    HttpRequest request_3{"GET", "/foo/bar/baz", HTTP_VERSION_0_9, vector<HttpHeader>{{"MyHeader", "myval3"}}, ""};
+
+    MockConnection* mock_conn_1 = new MockConnection(request_1.pack().serialize());
+    MockConnection* mock_conn_2 = new MockConnection(request_2.pack().serialize());
+    MockConnection* mock_conn_3 = new MockConnection(request_3.pack().serialize());
     MockListener* mock_listener = new MockListener(vector<Connection*> {mock_conn_3, mock_conn_2, mock_conn_1});
     HttpListener http_listener(mock_listener);
 
     HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"KEY", "VAL"}}, ""};
-    string response_str("HTTP/1.1 200 OK\r\nKEY: VAL\r\n\r\n");
+    string response_str = response.pack().serialize();
 
     // TODO: test failure before listen?
     http_listener.listen();
@@ -215,26 +219,20 @@ void test_http_listener(TestRunner& runner) {
     // chunk in blocks to guard against mistakes due to similar variable names
     {
         HttpConnection conn_1 = http_listener.accept();
-        HttpRequest request_1 = conn_1.read_request();
-        runner.assert_equal(string("GET"), request_1.method, "wrong first request method");
-        runner.assert_equal(string("/foo/bar"), request_1.uri, "wrong first request uri");
-        runner.assert_equal(HTTP_VERSION_1_0, request_1.version, "wrong first request version");
+        HttpRequest received_req_1 = conn_1.read_request();
+        runner.assert_equal(request_1, received_req_1, "wrong first received request");
         conn_1.write_response(response);
         runner.assert_equal(response_str, mock_conn_1->written(), "wrong first response");
     } {
         HttpConnection conn_2 = http_listener.accept();
-        HttpRequest request_2 = conn_2.read_request();
-        runner.assert_equal(string("GET"), request_2.method, "wrong second request method");
-        runner.assert_equal(string("/"), request_2.uri, "wrong second request uri");
-        runner.assert_equal(HTTP_VERSION_1_1, request_2.version, "wrong second request version");
+        HttpRequest received_req_2 = conn_2.read_request();
+        runner.assert_equal(request_2, received_req_2, "wrong second received request");
         conn_2.write_response(response);
         runner.assert_equal(response_str, mock_conn_2->written(), "wrong second response");
     } {
         HttpConnection conn_3 = http_listener.accept();
-        HttpRequest request_3 = conn_3.read_request();
-        runner.assert_equal(string("GET"), request_3.method, "wrong third request method");
-        runner.assert_equal(string("/foo/bar/baz"), request_3.uri, "wrong third request uri");
-        runner.assert_equal(HTTP_VERSION_0_9, request_3.version, "wrong third request version");
+        HttpRequest received_req_3 = conn_3.read_request();
+        runner.assert_equal(request_3, received_req_3, "wrong third received request");
         conn_3.write_response(response);
         runner.assert_equal(response_str, mock_conn_3->written(), "wrong third response");
     } {

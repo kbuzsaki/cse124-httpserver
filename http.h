@@ -12,6 +12,9 @@ struct HttpFrame {
     std::string initial_line;
     std::vector<std::string> header_lines;
     std::string body;
+
+public:
+    std::string serialize();
 };
 std::ostream& operator<<(std::ostream&, const HttpFrame&);
 bool operator==(const HttpFrame&, const HttpFrame&);
@@ -31,6 +34,9 @@ struct HttpRequest {
     std::string version;
     std::vector<HttpHeader> headers;
     std::string body;
+
+public:
+    HttpFrame pack();
 };
 std::ostream& operator<<(std::ostream&, const HttpRequest&);
 bool operator==(const HttpRequest&, const HttpRequest&);
@@ -55,6 +61,9 @@ struct HttpResponse {
     HttpStatus status;
     std::vector<HttpHeader> headers;
     std::string body;
+
+public:
+    HttpFrame pack();
 };
 std::ostream& operator<<(std::ostream&, const HttpResponse&);
 bool operator==(const HttpResponse&, const HttpResponse&);

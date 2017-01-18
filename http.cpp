@@ -16,6 +16,19 @@ using std::vector;
 vector<HttpHeader> parse_headers(const vector<string>&);
 
 
+std::string HttpFrame::serialize() {
+    stringstream buf;
+
+    buf << this->initial_line << CRLF;
+    for (size_t i = 0; i < this->header_lines.size(); i++) {
+        buf << this->header_lines[i] << CRLF;
+    }
+    buf << CRLF;
+    buf << this->body;
+
+    return buf.str();
+}
+
 std::ostream& operator<<(std::ostream& os, const HttpFrame& frame) {
     return os << "{'" << frame.initial_line << "', " << frame.header_lines << ", '" << frame.body << "'}";
 }
@@ -41,6 +54,24 @@ bool operator!=(const HttpHeader& lhs, const HttpHeader& rhs) {
     return !(lhs == rhs);
 }
 
+
+HttpFrame HttpRequest::pack() {
+    HttpFrame frame;
+
+    stringstream buf;
+    buf << this->method << " " << this->uri << " " << this->version;
+    frame.initial_line = buf.str();
+
+    for (size_t i = 0; i < this->headers.size(); i++) {
+        buf.str("");
+        buf << this->headers[i].key << ": " << this->headers[i].value;
+        frame.header_lines.push_back(buf.str());
+    }
+
+    frame.body = this->body;
+
+    return frame;
+}
 
 std::ostream& operator<<(std::ostream& os, const HttpRequest& request) {
     return os << "{'" << request.method << "', '" << request.uri << "', '" << request.version << "', "
@@ -69,6 +100,24 @@ bool operator!=(const HttpStatus& lhs, const HttpStatus& rhs) {
     return !(lhs == rhs);
 }
 
+
+HttpFrame HttpResponse::pack() {
+    HttpFrame frame;
+
+    stringstream buf;
+    buf << this->version << " " << this->status.code << " " << this->status.name;
+    frame.initial_line = buf.str();
+
+    for (size_t i = 0; i < this->headers.size(); i++) {
+        buf.str("");
+        buf << this->headers[i].key << ": " << this->headers[i].value;
+        frame.header_lines.push_back(buf.str());
+    }
+
+    frame.body = this->body;
+
+    return frame;
+}
 
 std::ostream& operator<<(std::ostream& os, const HttpResponse& response) {
     return os << "{'" << response.version << "', " << response.status << ", " << response.headers << ", '" << response.body << "'}";
@@ -126,16 +175,7 @@ HttpFrame HttpConnection::read_frame() {
 }
 
 void HttpConnection::write_frame(HttpFrame frame) {
-    stringstream buf;
-
-    buf << frame.initial_line << CRLF;
-    for (size_t i = 0; i < frame.header_lines.size(); i++) {
-        buf << frame.header_lines[i] << CRLF;
-    }
-    buf << CRLF;
-    buf << frame.body;
-
-    this->conn.write(buf.str());
+    this->conn.write(frame.serialize());
 }
 
 HttpRequest HttpConnection::read_request() {
@@ -160,21 +200,7 @@ HttpRequest HttpConnection::read_request() {
 }
 
 void HttpConnection::write_response(HttpResponse response) {
-    HttpFrame frame;
-
-    stringstream buf;
-    buf << response.version << " " << response.status.code << " " << response.status.name;
-    frame.initial_line = buf.str();
-
-    for (size_t i = 0; i < response.headers.size(); i++) {
-        buf.str("");
-        buf << response.headers[i].key << ": " << response.headers[i].value;
-        frame.header_lines.push_back(buf.str());
-    }
-
-    frame.body = response.body;
-
-    this->write_frame(frame);
+    this->write_frame(response.pack());
 }
 
 
