@@ -135,6 +135,23 @@ void test_mock_listener(TestRunner& runner) {
     delete mock_conn_3;
 }
 
+void test_mock_handler(TestRunner& runner) {
+    HttpResponse response = HttpResponse{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"OtherKey", "othervalue"}}, ""};
+    MockHttpHandler mock_handler(response);
+
+    vector<HttpRequest> requests = {
+        {"GET", "/foo/bar", HTTP_VERSION_1_1, vector<HttpHeader>{HttpHeader{"SomeKey", "somevalue"}}, ""},
+        {"PUT", "/", HTTP_VERSION_0_9, vector<HttpHeader>{HttpHeader{}}, ""},
+        {"GET", "/baz", HTTP_VERSION_1_0, vector<HttpHeader>{HttpHeader{"SomeOtherKey", "othersomevalue"}, HttpHeader{"foo", "bar"}}, ""}
+    };
+
+    for (auto& request : requests) {
+        HttpResponse received_response = mock_handler.handle_request(request);
+        runner.assert_equal(request, mock_handler.request(), "stored request incorrect");
+        runner.assert_equal(response, received_response, "received response incorrect");
+    }
+}
+
 void test_buffered_connection(TestRunner& runner) {
     MockConnection* empty_mock = new MockConnection("");
     BufferedConnection empty_buffered(empty_mock);
@@ -246,6 +263,7 @@ int main() {
     test_split(runner);
     test_mock_connection(runner);
     test_mock_listener(runner);
+    test_mock_handler(runner);
     test_buffered_connection(runner);
     test_http_connection(runner);
     test_http_listener(runner);

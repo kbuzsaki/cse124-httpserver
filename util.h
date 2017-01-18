@@ -6,6 +6,8 @@
 #include <sstream>
 #include <vector>
 #include "connection.h"
+#include "handler.h"
+#include "http.h"
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
@@ -56,6 +58,18 @@ public:
     virtual bool is_closed();
 
     std::string written();
+};
+
+class MockHttpHandler : public HttpHandler {
+    HttpResponse response_payload;
+    HttpRequest request_copy;
+
+public:
+    MockHttpHandler(const HttpResponse& response);
+
+    virtual HttpResponse handle_request(const HttpRequest&);
+
+    HttpRequest request();
 };
 
 #endif //UTIL_H

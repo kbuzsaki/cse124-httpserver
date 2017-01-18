@@ -102,3 +102,15 @@ Connection* MockListener::accept() {
     connections.pop_back();
     return conn;
 }
+
+
+MockHttpHandler::MockHttpHandler(const HttpResponse &response) : response_payload(response), request_copy() {}
+
+HttpResponse MockHttpHandler::handle_request(const HttpRequest& request) {
+    request_copy = request;
+    return response_payload;
+}
+
+HttpRequest MockHttpHandler::request() {
+    return request_copy;
+}
