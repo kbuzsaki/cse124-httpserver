@@ -3,6 +3,7 @@
 #include "util.h"
 
 using std::ios;
+using std::max;
 using std::min;
 using std::string;
 using std::stringstream;
@@ -17,11 +18,14 @@ vector<string> split_n(string s, string sep, int n_splits) {
     vector<string> strs;
 
     size_t start = 0;
-    size_t end = 0;
-    while (true) {
-        end = s.find(sep, start);
+    size_t end = s.find(sep, start);
+    // weird hack to prevent having an extra '' at the beginning with empty string separator
+    if (sep == "") {
+        end = 1;
+    }
 
-        if (end != string::npos && (n_splits < 0 || (strs.size() < (size_t) n_splits))) {
+    while (true) {
+        if (end < s.size() && (n_splits < 0 || (strs.size() < (size_t) n_splits))) {
             strs.push_back(s.substr(start, end - start));
         } else {
             strs.push_back(s.substr(start, s.size()));
@@ -29,6 +33,7 @@ vector<string> split_n(string s, string sep, int n_splits) {
         }
 
         start = end + sep.size();
+        end = max(s.find(sep, start), (end + 1));
     }
 }
 

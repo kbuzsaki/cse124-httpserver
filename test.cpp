@@ -65,7 +65,7 @@ int array_size(const T (&)[S]) {
 }
 
 void test_split(TestRunner& runner) {
-    runner.assert_equal(vector<string>{""}, split("", " "), "splitting empty string");
+    runner.assert_equal(vector<string>{""}, split_n("", " ", 10), "split_n 10 with empty string");
     runner.assert_equal(vector<string>{"a"}, split("a", " "), "splitting on space with 1 part");
     runner.assert_equal(vector<string>{"a", "b"}, split("a b", " "), "splitting on space with 2 parts");
     runner.assert_equal(vector<string>{"a", "b", "c"}, split("a b c", " "), "splitting on space with 3 parts");
@@ -93,6 +93,9 @@ void test_split(TestRunner& runner) {
     runner.assert_equal(vector<string>{"dog", "cat", "bear", ""}, split("dogabcatabbearab", "ab"), "split on 'ab' with 3 multicharacter parts and trailing sep");
 
     runner.assert_equal(vector<string>{"Host", "localhost:6060"}, split_n("Host: localhost:6060", ": ", 1), "splitting http header containing ':'");
+
+    runner.assert_equal(vector<string>{"f", "o", "o"}, split("foo", ""), "splitting on empty string");
+    runner.assert_equal(vector<string>{""}, split("", ""), "splitting empty string on empty string");
 }
 
 void test_mock_connection(TestRunner& runner) {
