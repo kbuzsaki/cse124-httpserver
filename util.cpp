@@ -37,6 +37,20 @@ vector<string> split_n(string s, string sep, int n_splits) {
     }
 }
 
+string join(string joiner, vector<string> parts) {
+    stringstream buf;
+
+    for (size_t i = 0; i < parts.size(); i++) {
+        if (i == 0) {
+            buf << parts[i];
+        } else {
+            buf << joiner << parts[i];
+        }
+    }
+
+    return buf.str();
+}
+
 string pop_n_sstream(stringstream& buffer, size_t n, size_t discard) {
     string buf_str = buffer.str();
 
@@ -60,5 +74,31 @@ size_t sstream_size(std::stringstream& buffer) {
     return size;
 }
 
+string canonicalize_path(string path) {
+    if (path == "") {
+        return "";
+    }
+
+    vector<string> valid_parts;
+
+    vector<string> parts = split(path, "/");
+    for (auto& part : parts) {
+        if (part == "") {
+            continue;
+        } else if (part == ".") {
+            continue;
+        } else if (part == "..") {
+            if (valid_parts.size() == 0) {
+                return "";
+            } else {
+                valid_parts.pop_back();
+            }
+        } else {
+            valid_parts.push_back(part);
+        }
+    }
+
+    return "/" + join("/", valid_parts);
+}
 
 

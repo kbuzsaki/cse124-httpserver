@@ -98,6 +98,24 @@ void test_split(TestRunner& runner) {
     runner.assert_equal(vector<string>{""}, split("", ""), "splitting empty string on empty string");
 }
 
+void test_canonicalize_path(TestRunner& runner) {
+    runner.assert_equal(string(""), canonicalize_path(""), "canonicalize empty string");
+
+    runner.assert_equal(string("/"), canonicalize_path("/"), "canonicalize root path");
+    runner.assert_equal(string("/foo/bar"), canonicalize_path("/foo/bar"), "canonicalize valid path");
+    runner.assert_equal(string("/foo/bar"), canonicalize_path("/foo/./bar"), "canonicalize path with '.'");
+    runner.assert_equal(string("/bar"), canonicalize_path("/foo/../bar"), "canonicalize path with '..'");
+    runner.assert_equal(string("/foo/bar"), canonicalize_path("/foo/./bar/../baz/./cat/./../../bar"), "canonicalize weird path");
+
+    runner.assert_equal(string("/foo/bar"), canonicalize_path("foo/bar"), "canonicalize path without leading /");
+    runner.assert_equal(string("/foo/bar"), canonicalize_path("/foo/bar/"), "canonicalize path with trailing /");
+    runner.assert_equal(string("/foo/bar"), canonicalize_path("foo/bar/"), "canonicalize path without leading / and with trailing /");
+    runner.assert_equal(string("/foo/bar"), canonicalize_path("/foo///////bar"), "canonicalize path extra /");
+
+    runner.assert_equal(string(""), canonicalize_path("/foo/../../bar"), "canonicalize escaping path");
+    runner.assert_equal(string(""), canonicalize_path("/foo/bar/../baz/../../../bar"), "canonicalize weird escaping path");
+}
+
 void test_mock_connection(TestRunner& runner) {
     MockConnection empty_mock("");
     runner.assert_equal(string(""), empty_mock.read(), "empty mock fails to read empty string");
@@ -391,6 +409,7 @@ int main() {
     TestRunner runner;
 
     test_split(runner);
+    test_canonicalize_path(runner);
     test_mock_connection(runner);
     test_mock_listener(runner);
     test_mock_handler(runner);

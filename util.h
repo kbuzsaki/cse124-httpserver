@@ -34,4 +34,6 @@ std::string pop_n_sstream(std::stringstream& buffer, size_t n, size_t discard);
 
 size_t sstream_size(std::stringstream& buffer);
 
+std::string canonicalize_path(std::string path);
+
 #endif //UTIL_H
