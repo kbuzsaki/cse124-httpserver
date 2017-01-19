@@ -314,10 +314,9 @@ void test_http_server(TestRunner& runner) {
     server.serve();
 
     runner.assert_equal(vector<const HttpRequest>{request_1, request_2, request_3}, mock_handler->requests(), "handler received requests incorrectly");
-    // TODO: fix this after shared ptr
-    // runner.assert_equal(response.pack().serialize(), mock_conn_1->written(), "mock conn 1 received wrong response");
-    // runner.assert_equal(response.pack().serialize(), mock_conn_2->written(), "mock conn 2 received wrong response");
-    // runner.assert_equal(response.pack().serialize(), mock_conn_3->written(), "mock conn 3 received wrong response");
+    runner.assert_equal(response.pack().serialize(), mock_connections[0]->written(), "mock conn 1 received wrong response");
+    runner.assert_equal(response.pack().serialize(), mock_connections[1]->written(), "mock conn 2 received wrong response");
+    runner.assert_equal(response.pack().serialize(), mock_connections[2]->written(), "mock conn 3 received wrong response");
 }
 
 int main() {
