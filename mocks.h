@@ -39,14 +39,14 @@ public:
 
 class MockHttpHandler : public HttpHandler {
     HttpResponse response_payload;
-    HttpRequest request_copy;
+    std::vector<const HttpRequest> request_copies;
 
 public:
     MockHttpHandler(const HttpResponse& response);
 
     virtual HttpResponse handle_request(const HttpRequest&);
 
-    HttpRequest request();
+    const std::vector<const HttpRequest>& requests();
 };
 
 #endif //MOCKS_H

@@ -60,13 +60,13 @@ Connection* MockListener::accept() {
 }
 
 
-MockHttpHandler::MockHttpHandler(const HttpResponse &response) : response_payload(response), request_copy() {}
+MockHttpHandler::MockHttpHandler(const HttpResponse &response) : response_payload(response), request_copies() {}
 
 HttpResponse MockHttpHandler::handle_request(const HttpRequest& request) {
-    request_copy = request;
+    request_copies.push_back(request);
     return response_payload;
 }
 
-HttpRequest MockHttpHandler::request() {
-    return request_copy;
+const vector<const HttpRequest>& MockHttpHandler::requests() {
+    return request_copies;
 }

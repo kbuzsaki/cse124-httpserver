@@ -149,7 +149,7 @@ void test_mock_handler(TestRunner& runner) {
 
     for (auto& request : requests) {
         HttpResponse received_response = mock_handler.handle_request(request);
-        runner.assert_equal(request, mock_handler.request(), "stored request incorrect");
+        runner.assert_equal(request, mock_handler.requests()[mock_handler.requests().size() - 1], "stored request incorrect");
         runner.assert_equal(response, received_response, "received response incorrect");
     }
 }
@@ -286,7 +286,7 @@ void test_http_listener(TestRunner& runner) {
     }
 }
 
-void test_http_server(TestRunner&) {
+void test_http_server(TestRunner& runner) {
     HttpRequest request_1{"GET", "/foo/bar", HTTP_VERSION_1_0, vector<HttpHeader>{{"MyHeader", "myval"}}, ""};
     HttpRequest request_2{"GET", "/", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}}, ""};
     HttpRequest request_3{"GET", "/foo/bar/baz", HTTP_VERSION_0_9, vector<HttpHeader>{{"MyHeader", "myval3"}}, ""};
@@ -296,12 +296,17 @@ void test_http_server(TestRunner&) {
     MockListener* mock_listener = new MockListener(vector<Connection*> {mock_conn_3, mock_conn_2, mock_conn_1});
 
     HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"OtherKey", "othervalue"}}, ""};
-    HttpHandler* mock_handler = new MockHttpHandler(response);
+    MockHttpHandler* mock_handler = new MockHttpHandler(response);
 
     HttpServer server(HttpListener(mock_listener), mock_handler);
 
-    // TODO: implement halting of serve() so that assertions can be performed afterwards
-    // server.serve();
+    server.serve();
+
+    runner.assert_equal(vector<const HttpRequest>{request_1, request_2, request_3}, mock_handler->requests(), "handler received requests incorrectly");
+    // TODO: fix this after shared ptr
+    // runner.assert_equal(response.pack().serialize(), mock_conn_1->written(), "mock conn 1 received wrong response");
+    // runner.assert_equal(response.pack().serialize(), mock_conn_2->written(), "mock conn 2 received wrong response");
+    // runner.assert_equal(response.pack().serialize(), mock_conn_3->written(), "mock conn 3 received wrong response");
 }
 
 int main() {
