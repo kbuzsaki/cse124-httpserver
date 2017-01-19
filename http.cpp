@@ -142,6 +142,16 @@ HttpResponse not_found_response() {
     return response;
 }
 
+HttpResponse bad_request_response() {
+    HttpResponse response;
+    response.version = HTTP_VERSION_1_1;
+    response.status = BAD_REQUEST_STATUS;
+    response.headers.push_back(HttpHeader{"Server", "TritonHTTP/0.1"});
+    response.headers.push_back(HttpHeader{"Content-Length", "0"});
+    response.body = "";
+    return response;
+}
+
 HttpResponse internal_server_error_response() {
     HttpResponse response;
     response.version = HTTP_VERSION_1_1;

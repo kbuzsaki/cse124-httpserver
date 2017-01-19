@@ -1,4 +1,8 @@
+#include <exception>
 #include "server.h"
+
+using std::exception;
+
 
 HttpListener::HttpListener(Listener* listener) : listener(listener) {}
 
@@ -29,10 +33,22 @@ void HttpServer::serve() {
     listener.listen();
 
     while (true) {
-        HttpConnection conn = listener.accept();
-        HttpRequest request = conn.read_request();
-        HttpResponse response = handler->handle_request(request);
-        conn.write_response(response);
+        try {
+            HttpConnection conn = listener.accept();
+
+            try {
+                HttpRequest request = conn.read_request();
+                HttpResponse response = handler->handle_request(request);
+                conn.write_response(response);
+            } catch (HttpRequestParseError&) {
+                conn.write_response(bad_request_response());
+            } catch (exception&) {
+                conn.write_response(internal_server_error_response());
+            }
+        } catch (ListenerError&) {
+            // TODO: make this log somehow?
+            return;
+        }
     }
 }
 

@@ -70,6 +70,7 @@ std::ostream& operator<<(std::ostream&, const HttpResponse&);
 bool operator==(const HttpResponse&, const HttpResponse&);
 bool operator!=(const HttpResponse&, const HttpResponse&);
 
+HttpResponse bad_request_response();
 HttpResponse not_found_response();
 HttpResponse internal_server_error_response();
 
