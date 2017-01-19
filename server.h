@@ -5,12 +5,11 @@
 #include "listener.h"
 
 class HttpListener {
-    Listener* listener;
+    std::shared_ptr<Listener> listener;
 
 public:
-    HttpListener(Listener*);
+    HttpListener(std::shared_ptr<Listener>);
     HttpListener(HttpListener&&);
-    ~HttpListener();
 
     void listen();
     HttpConnection accept();

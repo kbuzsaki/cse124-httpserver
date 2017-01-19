@@ -6,6 +6,7 @@
 
 using std::cerr;
 using std::cout;
+using std::make_shared;
 using std::string;
 using std::endl;
 
@@ -33,6 +34,6 @@ public:
 void start_httpd(unsigned short port, string doc_root) {
     cerr << "Starting server (port: " << port << ", doc_root: " << doc_root << ")" << endl;
 
-    HttpServer server(HttpListener(new SocketListener(port)), new LoggingHttpHandler());
+    HttpServer server(HttpListener(make_shared<SocketListener>(port)), new LoggingHttpHandler());
     server.serve();
 }

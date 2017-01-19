@@ -2,16 +2,13 @@
 #include "server.h"
 
 using std::exception;
+using std::shared_ptr;
 
 
-HttpListener::HttpListener(Listener* listener) : listener(listener) {}
+HttpListener::HttpListener(shared_ptr<Listener> listener) : listener(listener) {}
 
 HttpListener::HttpListener(HttpListener&& listener) : listener(listener.listener) {
     listener.listener = NULL;
-}
-
-HttpListener::~HttpListener() {
-    delete listener;
 }
 
 void HttpListener::listen() {

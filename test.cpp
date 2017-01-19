@@ -257,7 +257,7 @@ void test_http_listener(TestRunner& runner) {
             mock_connections[1],
             mock_connections[0]
     };
-    MockListener* mock_listener = new MockListener(connections);
+    shared_ptr<MockListener> mock_listener = make_shared<MockListener>(connections);
     HttpListener http_listener(mock_listener);
 
     HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"KEY", "VAL"}}, ""};
@@ -304,7 +304,7 @@ void test_http_server(TestRunner& runner) {
             mock_connections[1],
             mock_connections[0]
     };
-    MockListener* mock_listener = new MockListener(connections);
+    shared_ptr<MockListener> mock_listener = make_shared<MockListener>(connections);
 
     HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"OtherKey", "othervalue"}}, ""};
     MockHttpHandler* mock_handler = new MockHttpHandler(response);
