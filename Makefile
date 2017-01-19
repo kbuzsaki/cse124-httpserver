@@ -2,8 +2,8 @@
 CC=g++
 CFLAGS=-std=c++0x -ggdb -Wall -Wextra -pedantic -Werror
 CXXFLAGS=$(CFLAGS)
-DEPS = httpd.h connection.h util.h http.h server.h mocks.h listener.h
-SRCS = httpd.cpp connection.cpp util.cpp http.cpp server.cpp mocks.cpp listener.cpp
+DEPS = httpd.h connection.h util.h http.h server.h mocks.h listener.h handlers.h file_repository.h
+SRCS = httpd.cpp connection.cpp util.cpp http.cpp server.cpp mocks.cpp listener.cpp handlers.cpp
 MAIN_SRCS = main.c $(SRCS)
 MAIN_OBJS = $(MAIN_SRCS:.c=.o)
 TEST_SRCS = test.c $(SRCS)

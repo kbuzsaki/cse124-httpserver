@@ -1,8 +1,10 @@
 #ifndef MOCKS_H
 #define MOCKS_H
 
+#include <unordered_map>
 #include "connection.h"
 #include "http.h"
+#include "file_repository.h"
 #include "listener.h"
 #include "server.h"
 
@@ -50,6 +52,28 @@ public:
     virtual HttpResponse handle_request(const HttpRequest&);
 
     const std::vector<const HttpRequest>& requests();
+};
+
+
+class MockFile : public File {
+    const bool world_readable_payload;
+    const std::string contents_payload;
+
+public:
+    MockFile(const bool& world_readable_payload, const std::string& contents_payload);
+
+    virtual bool world_readable();
+    virtual std::string contents();
+};
+
+
+class MockFileRepository : public FileRepository {
+    const std::unordered_map<std::string, std::shared_ptr<File>> mock_files;
+
+public:
+    MockFileRepository(std::unordered_map<std::string, std::shared_ptr<File>> mock_files);
+
+    virtual std::shared_ptr<File> get_file(std::string path);
 };
 
 #endif //MOCKS_H

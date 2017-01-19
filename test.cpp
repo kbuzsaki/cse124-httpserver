@@ -2,6 +2,7 @@
 #include <vector>
 #include "connection.h"
 #include "http.h"
+#include "handlers.h"
 #include "listener.h"
 #include "mocks.h"
 #include "server.h"
@@ -149,6 +150,49 @@ void test_mock_handler(TestRunner& runner) {
         runner.assert_equal(request, mock_handler.requests()[mock_handler.requests().size() - 1], "stored request incorrect");
         runner.assert_equal(response, received_response, "received response incorrect");
     }
+}
+
+void test_mock_file(TestRunner& runner) {
+    MockFile public_file(true, "some stuff");
+    runner.assert_equal(true, public_file.world_readable(), "mock public file was not public");
+    runner.assert_equal(string("some stuff"), public_file.contents(), "mock public file had wrong contents");
+
+    MockFile empty_file(true, "");
+    runner.assert_equal(true, empty_file.world_readable(), "mock empty file was not public");
+    runner.assert_equal(string(""), empty_file.contents(), "mock empty file had wrong contents");
+
+    // TODO: should a private file not have any contents?
+    MockFile private_file(false, "some other stuff");
+    runner.assert_equal(false, private_file.world_readable(), "mock private file was not private");
+    runner.assert_equal(string("some other stuff"), private_file.contents(), "mock private file had wrong contents");
+}
+
+void test_mock_file_repository(TestRunner& runner) {
+    unordered_map<string, shared_ptr<File>> empty_map;
+    MockFileRepository empty_repository(empty_map);
+    runner.assert_equal(shared_ptr<File>(NULL), empty_repository.get_file(""), "empty mock repository returned a non null file");
+    runner.assert_equal(shared_ptr<File>(NULL), empty_repository.get_file(""), "empty mock repository returned a non null file");
+    runner.assert_equal(shared_ptr<File>(NULL), empty_repository.get_file("foo"), "empty mock repository returned a non null file");
+    runner.assert_equal(shared_ptr<File>(NULL), empty_repository.get_file("foo"), "empty mock repository returned a non null file");
+
+    shared_ptr<File> foo_file = make_shared<MockFile>(true, "foo contents here");
+    shared_ptr<File> private_bar_file = make_shared<MockFile>(false, "bar contents here");
+    shared_ptr<File> nested_file = make_shared<MockFile>(true, "baz/car/tar contents here");
+    unordered_map<string, shared_ptr<File>> full_map = {
+            {"/foo", foo_file},
+            {"/bar", private_bar_file},
+            {"/baz/car/tar", nested_file}
+    };
+    MockFileRepository full_repository(full_map);
+
+    runner.assert_equal(shared_ptr<File>(NULL), full_repository.get_file(""), "full mock repository returned a non null file for a missing file");
+    runner.assert_equal(shared_ptr<File>(NULL), full_repository.get_file(""), "full mock repository returned a non null file for a missing file");
+    runner.assert_equal(shared_ptr<File>(NULL), full_repository.get_file("/missing"), "full mock repository returned a non null file for a missing file");
+    runner.assert_equal(shared_ptr<File>(NULL), full_repository.get_file("/missing"), "full mock repository returned a non null file for a missing file");
+    runner.assert_equal(foo_file, full_repository.get_file("/foo"), "full mock repository returned the wrong file for foo");
+    runner.assert_equal(foo_file, full_repository.get_file("/foo"), "full mock repository returned the wrong file for foo");
+    runner.assert_equal(private_bar_file, full_repository.get_file("/bar"), "full mock repository returned the wrong file for bar");
+    runner.assert_equal(nested_file, full_repository.get_file("/baz/car/tar"), "full mock repository returned the wrong file for baz/car/tar");
 }
 
 void test_buffered_connection(TestRunner& runner) {
@@ -313,6 +357,33 @@ void test_http_server(TestRunner& runner) {
     runner.assert_equal(bad_request_response().pack().serialize(), mock_connections[3]->written(), "mock conn 4 received wrong response");
 }
 
+void test_file_serving_handler(TestRunner& runner) {
+    unordered_map<string, shared_ptr<File>> repository_map = {
+            {"/foo", make_shared<MockFile>(true, "foo contents here")},
+            {"/bar", make_shared<MockFile>(false, "bar contents here")},
+            {"/baz/car/tar", make_shared<MockFile>(true, "baz/car/tar contents here")}
+    };
+    shared_ptr<MockFileRepository> mock_repository = make_shared<MockFileRepository>(repository_map);
+
+    FileServingHttpHandler handler(mock_repository);
+
+    HttpRequest foo_request = HttpRequest{"GET", "/foo", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
+    HttpResponse foo_response = handler.handle_request(foo_request);
+    runner.assert_equal(ok_response("foo contents here"), foo_response, "wrong response for good public file");
+
+    HttpRequest bar_request = HttpRequest{"GET", "/bar", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
+    HttpResponse bar_response = handler.handle_request(bar_request);
+    runner.assert_equal(forbidden_response(), bar_response, "wrong response for private file");
+
+    HttpRequest missing_request = HttpRequest{"GET", "/missing", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
+    HttpResponse missing_response = handler.handle_request(missing_request);
+    runner.assert_equal(not_found_response(), missing_response, "wrong response for missing file");
+
+    HttpRequest nested_request = HttpRequest{"GET", "/baz/car/tar", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
+    HttpResponse nested_response = handler.handle_request(nested_request);
+    runner.assert_equal(ok_response("baz/car/tar contents here"), nested_response, "wrong response for nested file");
+}
+
 int main() {
     TestRunner runner;
 
@@ -320,10 +391,13 @@ int main() {
     test_mock_connection(runner);
     test_mock_listener(runner);
     test_mock_handler(runner);
+    test_mock_file(runner);
+    test_mock_file_repository(runner);
     test_buffered_connection(runner);
     test_http_connection(runner);
     test_http_listener(runner);
     test_http_server(runner);
+    test_file_serving_handler(runner);
 
     runner.print_results(cout);
     return 0;

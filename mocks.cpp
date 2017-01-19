@@ -80,3 +80,25 @@ HttpResponse MockHttpHandler::handle_request(const HttpRequest& request) {
 const vector<const HttpRequest>& MockHttpHandler::requests() {
     return request_copies;
 }
+
+
+MockFile::MockFile(const bool& world_readable, const std::string& contents) : world_readable_payload(world_readable), contents_payload(contents) {}
+
+bool MockFile::world_readable() {
+    return world_readable_payload;
+}
+
+std::string MockFile::contents() {
+    return contents_payload;
+}
+
+
+MockFileRepository::MockFileRepository(std::unordered_map<std::string, std::shared_ptr<File>> mock_files) : mock_files(mock_files) {}
+
+std::shared_ptr<File> MockFileRepository::get_file(std::string path) {
+    if (mock_files.count(path) == 0) {
+        return NULL;
+    }
+
+    return mock_files.at(path);
+}
