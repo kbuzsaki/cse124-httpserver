@@ -88,7 +88,7 @@ class HttpConnection {
     void write_frame(HttpFrame frame);
 
 public:
-    HttpConnection(Connection* conn);
+    HttpConnection(std::shared_ptr<Connection> conn);
     HttpRequest read_request();
     void write_response(HttpResponse);
 };

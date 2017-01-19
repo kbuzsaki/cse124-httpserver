@@ -117,24 +117,21 @@ void test_mock_connection(TestRunner& runner) {
 }
 
 void test_mock_listener(TestRunner& runner) {
-    Connection* mock_conn_1 = new MockConnection("1");
-    Connection* mock_conn_2 = new MockConnection("2");
-    Connection* mock_conn_3 = new MockConnection("3");
-    vector<Connection*> connections = {mock_conn_3, mock_conn_2, mock_conn_1};
+    vector<shared_ptr<Connection>> connections = {
+            make_shared<MockConnection>("1"),
+            make_shared<MockConnection>("2"),
+            make_shared<MockConnection>("3")
+    };
     MockListener mock_listener(connections);
 
     // TODO: test accept before listen?
     mock_listener.listen();
 
-    runner.assert_equal(mock_conn_1, mock_listener.accept(), "wrong first accepted conn");
-    runner.assert_equal(mock_conn_2, mock_listener.accept(), "wrong second accepted conn");
-    runner.assert_equal(mock_conn_3, mock_listener.accept(), "wrong third accepted conn");
+    runner.assert_equal(connections[2], mock_listener.accept(), "wrong first accepted conn");
+    runner.assert_equal(connections[1], mock_listener.accept(), "wrong second accepted conn");
+    runner.assert_equal(connections[0], mock_listener.accept(), "wrong third accepted conn");
 
     // TODO: test listen after exhausted
-
-    delete mock_conn_1;
-    delete mock_conn_2;
-    delete mock_conn_3;
 }
 
 void test_mock_handler(TestRunner& runner) {
@@ -155,7 +152,7 @@ void test_mock_handler(TestRunner& runner) {
 }
 
 void test_buffered_connection(TestRunner& runner) {
-    MockConnection* empty_mock = new MockConnection("");
+    shared_ptr<MockConnection> empty_mock = make_shared<MockConnection>("");
     BufferedConnection empty_buffered(empty_mock);
     runner.assert_equal(string(""), empty_buffered.read_until("\r\n"), "empty mock fails to read empty string");
     runner.assert_equal(string(""), empty_buffered.read_until("\r\n"), "empty mock fails to read empty string");
@@ -172,7 +169,7 @@ void test_buffered_connection(TestRunner& runner) {
     int read_sizes[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100};
     for (int i = 0; i < array_size(read_sizes); i++) {
         int read_size = read_sizes[i];
-        MockConnection* full_mock = new MockConnection("the big cat", read_size);
+        shared_ptr<MockConnection> full_mock = make_shared<MockConnection>("the big cat", read_size);
         BufferedConnection full_buffered(full_mock);
         runner.assert_equal(string("the"), full_buffered.read_until(" "), itos(read_size) + ") full mock failed first read");
         runner.assert_equal(string("big"), full_buffered.read_until(" "), itos(read_size) + ") full mock failed second read");
@@ -184,7 +181,7 @@ void test_buffered_connection(TestRunner& runner) {
     // test multicharacter separator buffered reads with a variety of read buffer sizes
     for (int i = 0; i < array_size(read_sizes); i++) {
         int read_size = read_sizes[i];
-        MockConnection* full_mock = new MockConnection("halloweenabfull cat stuffabmelodyababbutter", read_size);
+        shared_ptr<MockConnection> full_mock = make_shared<MockConnection>("halloweenabfull cat stuffabmelodyababbutter", read_size);
         BufferedConnection full_buffered(full_mock);
         runner.assert_equal(string("halloween"), full_buffered.read_until("ab"), itos(read_size) + ") full mock failed first multichar read");
         runner.assert_equal(string("full cat stuff"), full_buffered.read_until("ab"), itos(read_size) + ") full mock failed second multichar read");
@@ -198,7 +195,7 @@ void test_buffered_connection(TestRunner& runner) {
 
 // TODO: test failure cases
 void test_http_connection(TestRunner& runner) {
-    MockConnection* mock_conn = new MockConnection("GET /foo/bar/baz?param HTTP/0.9\r\nHost: example.com\r\nMyHeader: my_value\r\n\r\n");
+    shared_ptr<MockConnection> mock_conn = make_shared<MockConnection>("GET /foo/bar/baz?param HTTP/0.9\r\nHost: example.com\r\nMyHeader: my_value\r\n\r\n");
     HttpConnection request_conn(mock_conn);
     HttpRequest request = request_conn.read_request();
     runner.assert_equal(string("GET"), request.method, "incorrect request http method");
@@ -217,7 +214,7 @@ void test_http_connection(TestRunner& runner) {
     request_conn.write_response(response);
     runner.assert_equal(string("HTTP/1.1 200 OK\r\nServer: SomeServer\r\nSomeHeader: some_value\r\n\r\nfoobar baz\ndog"), mock_conn->written(), "incorrect response");
 
-    MockConnection* empty_mock_conn = new MockConnection("");
+    shared_ptr<MockConnection> empty_mock_conn = make_shared<MockConnection>("");
     HttpConnection empty_request_conn(empty_mock_conn);
     try {
         empty_request_conn.read_request();
@@ -226,7 +223,7 @@ void test_http_connection(TestRunner& runner) {
         runner.pass();
     }
 
-    MockConnection* bad_initial_line_mock_conn = new MockConnection("foo bar\r\n\r\n");
+    shared_ptr<MockConnection> bad_initial_line_mock_conn = make_shared<MockConnection>("foo bar\r\n\r\n");
     HttpConnection bad_initial_line_request_conn(bad_initial_line_mock_conn);
     try {
         bad_initial_line_request_conn.read_request();
@@ -235,7 +232,7 @@ void test_http_connection(TestRunner& runner) {
         runner.pass();
     }
 
-    MockConnection* bad_header_mock_conn = new MockConnection("GET / HTTP/1.1\r\nfoobar\r\n\r\n");
+    shared_ptr<MockConnection> bad_header_mock_conn = make_shared<MockConnection>("GET / HTTP/1.1\r\nfoobar\r\n\r\n");
     HttpConnection bad_header_request_conn(bad_header_mock_conn);
     try {
         bad_header_request_conn.read_request();
@@ -250,10 +247,17 @@ void test_http_listener(TestRunner& runner) {
     HttpRequest request_2{"GET", "/", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}}, ""};
     HttpRequest request_3{"GET", "/foo/bar/baz", HTTP_VERSION_0_9, vector<HttpHeader>{{"MyHeader", "myval3"}}, ""};
 
-    MockConnection* mock_conn_1 = new MockConnection(request_1.pack().serialize());
-    MockConnection* mock_conn_2 = new MockConnection(request_2.pack().serialize());
-    MockConnection* mock_conn_3 = new MockConnection(request_3.pack().serialize());
-    MockListener* mock_listener = new MockListener(vector<Connection*> {mock_conn_3, mock_conn_2, mock_conn_1});
+    vector<shared_ptr<MockConnection>> mock_connections = {
+            make_shared<MockConnection>(request_1.pack().serialize()),
+            make_shared<MockConnection>(request_2.pack().serialize()),
+            make_shared<MockConnection>(request_3.pack().serialize())
+    };
+    vector<shared_ptr<Connection>> connections = {
+            mock_connections[2],
+            mock_connections[1],
+            mock_connections[0]
+    };
+    MockListener* mock_listener = new MockListener(connections);
     HttpListener http_listener(mock_listener);
 
     HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"KEY", "VAL"}}, ""};
@@ -268,19 +272,19 @@ void test_http_listener(TestRunner& runner) {
         HttpRequest received_req_1 = conn_1.read_request();
         runner.assert_equal(request_1, received_req_1, "wrong first received request");
         conn_1.write_response(response);
-        runner.assert_equal(response_str, mock_conn_1->written(), "wrong first response");
+        runner.assert_equal(response_str, mock_connections[0]->written(), "wrong first response");
     } {
         HttpConnection conn_2 = http_listener.accept();
         HttpRequest received_req_2 = conn_2.read_request();
         runner.assert_equal(request_2, received_req_2, "wrong second received request");
         conn_2.write_response(response);
-        runner.assert_equal(response_str, mock_conn_2->written(), "wrong second response");
+        runner.assert_equal(response_str, mock_connections[1]->written(), "wrong second response");
     } {
         HttpConnection conn_3 = http_listener.accept();
         HttpRequest received_req_3 = conn_3.read_request();
         runner.assert_equal(request_3, received_req_3, "wrong third received request");
         conn_3.write_response(response);
-        runner.assert_equal(response_str, mock_conn_3->written(), "wrong third response");
+        runner.assert_equal(response_str, mock_connections[2]->written(), "wrong third response");
     } {
         // TODO: test accept when no more connections are remaining?
     }
@@ -290,10 +294,17 @@ void test_http_server(TestRunner& runner) {
     HttpRequest request_1{"GET", "/foo/bar", HTTP_VERSION_1_0, vector<HttpHeader>{{"MyHeader", "myval"}}, ""};
     HttpRequest request_2{"GET", "/", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}}, ""};
     HttpRequest request_3{"GET", "/foo/bar/baz", HTTP_VERSION_0_9, vector<HttpHeader>{{"MyHeader", "myval3"}}, ""};
-    MockConnection* mock_conn_1 = new MockConnection(request_1.pack().serialize());
-    MockConnection* mock_conn_2 = new MockConnection(request_2.pack().serialize());
-    MockConnection* mock_conn_3 = new MockConnection(request_3.pack().serialize());
-    MockListener* mock_listener = new MockListener(vector<Connection*> {mock_conn_3, mock_conn_2, mock_conn_1});
+    vector<shared_ptr<MockConnection>> mock_connections = {
+            make_shared<MockConnection>(request_1.pack().serialize()),
+            make_shared<MockConnection>(request_2.pack().serialize()),
+            make_shared<MockConnection>(request_3.pack().serialize())
+    };
+    vector<shared_ptr<Connection>> connections = {
+            mock_connections[2],
+            mock_connections[1],
+            mock_connections[0]
+    };
+    MockListener* mock_listener = new MockListener(connections);
 
     HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"OtherKey", "othervalue"}}, ""};
     MockHttpHandler* mock_handler = new MockHttpHandler(response);

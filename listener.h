@@ -12,7 +12,7 @@ public:
     virtual ~Listener() {};
 
     virtual void listen() = 0;
-    virtual Connection* accept() = 0;
+    virtual std::shared_ptr<Connection> accept() = 0;
 };
 
 
@@ -31,7 +31,7 @@ public:
     ~SocketListener();
 
     void listen();
-    Connection* accept();
+    std::shared_ptr<Connection> accept();
 };
 
 #endif // LISTENER_H

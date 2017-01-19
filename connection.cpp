@@ -8,6 +8,7 @@
 using std::cerr;
 using std::endl;
 using std::ios;
+using std::shared_ptr;
 using std::string;
 using std::stringstream;
 
@@ -67,7 +68,7 @@ bool SocketConnection::is_closed() {
 
 BufferedConnection::BufferedConnection() : conn(NULL), buffer() {}
 
-BufferedConnection::BufferedConnection(Connection* conn) : conn(conn), buffer() {}
+BufferedConnection::BufferedConnection(shared_ptr<Connection> conn) : conn(conn), buffer() {}
 
 BufferedConnection::BufferedConnection(BufferedConnection&& conn) : conn(conn.conn), buffer(conn.buffer.str()) {
     conn.conn = NULL;
@@ -75,7 +76,6 @@ BufferedConnection::BufferedConnection(BufferedConnection&& conn) : conn(conn.co
 
 BufferedConnection::~BufferedConnection() {
     this->close();
-    delete this->conn;
 }
 
 bool BufferedConnection::is_closed() {

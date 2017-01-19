@@ -4,6 +4,7 @@
 #include "util.h"
 
 using std::ostream;
+using std::shared_ptr;
 using std::string;
 using std::stringstream;
 using std::vector;
@@ -166,7 +167,7 @@ HttpResponse internal_server_error_response() {
 HttpRequestParseError::HttpRequestParseError(string message) : runtime_error(message) {}
 
 
-HttpConnection::HttpConnection(Connection* conn) : conn(conn) {}
+HttpConnection::HttpConnection(shared_ptr<Connection> conn) : conn(conn) {}
 
 HttpFrame HttpConnection::read_frame() {
     HttpFrame frame;

@@ -34,12 +34,12 @@ public:
 
 
 class BufferedConnection {
-    Connection* conn;
+    std::shared_ptr<Connection> conn;
     std::stringstream buffer;
 
 public:
     BufferedConnection();
-    BufferedConnection(Connection* conn);
+    BufferedConnection(std::shared_ptr<Connection> conn);
     BufferedConnection(BufferedConnection&&);
     ~BufferedConnection();
 

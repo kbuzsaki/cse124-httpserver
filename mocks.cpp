@@ -3,6 +3,7 @@
 #include "util.h"
 #include "mocks.h"
 
+using std::shared_ptr;
 using std::string;
 using std::vector;
 
@@ -43,18 +44,18 @@ string MockConnection::written() {
 }
 
 
-MockListener::MockListener(vector<Connection*> connections) : connections(connections) {}
+MockListener::MockListener(vector<shared_ptr<Connection>> connections) : connections(connections) {}
 
 MockListener::~MockListener() {}
 
 void MockListener::listen() { /* NOOP */ }
 
-Connection* MockListener::accept() {
+shared_ptr<Connection> MockListener::accept() {
     if (connections.empty()) {
         throw ListenerError("no more connections from mock listener");
     }
 
-    Connection* conn = connections.at(connections.size() - 1);
+    shared_ptr<Connection> conn = connections.at(connections.size() - 1);
     connections.pop_back();
     return conn;
 }

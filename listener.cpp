@@ -5,6 +5,8 @@
 #include "listener.h"
 #include "util.h"
 
+using std::make_shared;
+using std::shared_ptr;
 using std::stringstream;
 
 #define INVALID_SOCK (-1)
@@ -51,7 +53,7 @@ void SocketListener::listen() {
     }
 }
 
-Connection* SocketListener::accept() {
+shared_ptr<Connection> SocketListener::accept() {
     struct sockaddr_in client_addr;
     unsigned int client_len = sizeof(client_addr);
 
@@ -62,5 +64,5 @@ Connection* SocketListener::accept() {
         throw ListenerError(error.str());
     }
 
-    return new SocketConnection(client_sock);
+    return make_shared<SocketConnection>(client_sock);
 }

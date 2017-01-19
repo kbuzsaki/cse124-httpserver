@@ -8,14 +8,14 @@
 
 
 class MockListener : public Listener {
-    std::vector<Connection*> connections;
+    std::vector<std::shared_ptr<Connection>> connections;
 
 public:
-    MockListener(std::vector<Connection*> connections);
+    MockListener(std::vector<std::shared_ptr<Connection>> connections);
     virtual ~MockListener();
 
     virtual void listen();
-    virtual Connection* accept();
+    virtual std::shared_ptr<Connection> accept();
 };
 
 class MockConnection : public Connection {
