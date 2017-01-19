@@ -297,9 +297,11 @@ void test_http_server(TestRunner& runner) {
     vector<shared_ptr<MockConnection>> mock_connections = {
             make_shared<MockConnection>(request_1.pack().serialize()),
             make_shared<MockConnection>(request_2.pack().serialize()),
-            make_shared<MockConnection>(request_3.pack().serialize())
+            make_shared<MockConnection>(request_3.pack().serialize()),
+            make_shared<MockConnection>("foo bar")
     };
     vector<shared_ptr<Connection>> connections = {
+            mock_connections[3],
             mock_connections[2],
             mock_connections[1],
             mock_connections[0]
@@ -314,9 +316,12 @@ void test_http_server(TestRunner& runner) {
     server.serve();
 
     runner.assert_equal(vector<const HttpRequest>{request_1, request_2, request_3}, mock_handler->requests(), "handler received requests incorrectly");
+    // multiple success cases
     runner.assert_equal(response.pack().serialize(), mock_connections[0]->written(), "mock conn 1 received wrong response");
     runner.assert_equal(response.pack().serialize(), mock_connections[1]->written(), "mock conn 2 received wrong response");
     runner.assert_equal(response.pack().serialize(), mock_connections[2]->written(), "mock conn 3 received wrong response");
+    // malformed request case
+    runner.assert_equal(bad_request_response().pack().serialize(), mock_connections[3]->written(), "mock conn 4 received wrong response");
 }
 
 int main() {
