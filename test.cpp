@@ -307,7 +307,7 @@ void test_http_server(TestRunner& runner) {
     shared_ptr<MockListener> mock_listener = make_shared<MockListener>(connections);
 
     HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"OtherKey", "othervalue"}}, ""};
-    MockHttpHandler* mock_handler = new MockHttpHandler(response);
+    shared_ptr<MockHttpHandler> mock_handler = make_shared<MockHttpHandler>(response);
 
     HttpServer server(HttpListener(mock_listener), mock_handler);
 

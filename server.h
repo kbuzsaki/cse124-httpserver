@@ -26,11 +26,10 @@ public:
 
 class HttpServer {
     HttpListener listener;
-    HttpHandler* handler;
+    std::shared_ptr<HttpHandler> handler;
 
 public:
-    HttpServer(HttpListener&&, HttpHandler*);
-    ~HttpServer();
+    HttpServer(HttpListener&&, std::shared_ptr<HttpHandler>);
 
     void serve();
 };

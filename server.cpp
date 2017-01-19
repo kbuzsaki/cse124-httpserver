@@ -20,11 +20,7 @@ HttpConnection HttpListener::accept() {
 }
 
 
-HttpServer::HttpServer(HttpListener&& listener, HttpHandler* handler) : listener(std::move(listener)), handler(handler) {}
-
-HttpServer::~HttpServer() {
-    delete handler;
-}
+HttpServer::HttpServer(HttpListener&& listener, shared_ptr<HttpHandler> handler) : listener(std::move(listener)), handler(handler) {}
 
 void HttpServer::serve() {
     listener.listen();
