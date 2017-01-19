@@ -3,11 +3,14 @@
 #include "connection.h"
 #include "http.h"
 #include "server.h"
+#include "file_repository.h"
+#include "handlers.h"
 
 using std::cerr;
 using std::cout;
 using std::make_shared;
 using std::string;
+using std::shared_ptr;
 using std::endl;
 
 #define QUEUE_SIZE (100)
@@ -34,6 +37,7 @@ public:
 void start_httpd(unsigned short port, string doc_root) {
     cerr << "Starting server (port: " << port << ", doc_root: " << doc_root << ")" << endl;
 
-    HttpServer server(HttpListener(make_shared<SocketListener>(port)), make_shared<LoggingHttpHandler>());
+    shared_ptr<FileRepository> repository = make_shared<DirectoryFileRepository>(doc_root);
+    HttpServer server(HttpListener(make_shared<SocketListener>(port)), make_shared<FileServingHttpHandler>(repository));
     server.serve();
 }
