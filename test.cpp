@@ -127,9 +127,9 @@ void test_mock_listener(TestRunner& runner) {
     // TODO: test accept before listen?
     mock_listener.listen();
 
-    runner.assert_equal(connections[2], mock_listener.accept(), "wrong first accepted conn");
+    runner.assert_equal(connections[0], mock_listener.accept(), "wrong first accepted conn");
     runner.assert_equal(connections[1], mock_listener.accept(), "wrong second accepted conn");
-    runner.assert_equal(connections[0], mock_listener.accept(), "wrong third accepted conn");
+    runner.assert_equal(connections[2], mock_listener.accept(), "wrong third accepted conn");
 
     // TODO: test listen after exhausted
 }
@@ -252,12 +252,7 @@ void test_http_listener(TestRunner& runner) {
             make_shared<MockConnection>(request_2.pack().serialize()),
             make_shared<MockConnection>(request_3.pack().serialize())
     };
-    vector<shared_ptr<Connection>> connections = {
-            mock_connections[2],
-            mock_connections[1],
-            mock_connections[0]
-    };
-    shared_ptr<MockListener> mock_listener = make_shared<MockListener>(connections);
+    shared_ptr<MockListener> mock_listener = make_shared<MockListener>(mock_connections);
     HttpListener http_listener(mock_listener);
 
     HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"KEY", "VAL"}}, ""};
@@ -300,13 +295,7 @@ void test_http_server(TestRunner& runner) {
             make_shared<MockConnection>(request_3.pack().serialize()),
             make_shared<MockConnection>("foo bar")
     };
-    vector<shared_ptr<Connection>> connections = {
-            mock_connections[3],
-            mock_connections[2],
-            mock_connections[1],
-            mock_connections[0]
-    };
-    shared_ptr<MockListener> mock_listener = make_shared<MockListener>(connections);
+    shared_ptr<MockListener> mock_listener = make_shared<MockListener>(mock_connections);
 
     HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"OtherKey", "othervalue"}}, ""};
     shared_ptr<MockHttpHandler> mock_handler = make_shared<MockHttpHandler>(response);

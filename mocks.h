@@ -7,17 +7,6 @@
 #include "server.h"
 
 
-class MockListener : public Listener {
-    std::vector<std::shared_ptr<Connection>> connections;
-
-public:
-    MockListener(std::vector<std::shared_ptr<Connection>> connections);
-    virtual ~MockListener();
-
-    virtual void listen();
-    virtual std::shared_ptr<Connection> accept();
-};
-
 class MockConnection : public Connection {
     std::stringstream read_payload;
     std::stringstream write_payload;
@@ -36,6 +25,20 @@ public:
 
     std::string written();
 };
+
+
+class MockListener : public Listener {
+    std::vector<std::shared_ptr<Connection>> connections;
+
+public:
+    MockListener(std::vector<std::shared_ptr<Connection>> connections);
+    MockListener(std::vector<std::shared_ptr<MockConnection>> connections);
+    virtual ~MockListener();
+
+    virtual void listen();
+    virtual std::shared_ptr<Connection> accept();
+};
+
 
 class MockHttpHandler : public HttpHandler {
     HttpResponse response_payload;

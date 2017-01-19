@@ -44,7 +44,16 @@ string MockConnection::written() {
 }
 
 
-MockListener::MockListener(vector<shared_ptr<Connection>> connections) : connections(connections) {}
+MockListener::MockListener(vector<shared_ptr<Connection>> connections) : connections(connections) {
+    std::reverse(begin(this->connections), end(this->connections));
+}
+
+MockListener::MockListener(std::vector<std::shared_ptr<MockConnection>> mock_connections) {
+    for (size_t i = 0; i < mock_connections.size(); i++) {
+        this->connections.push_back(mock_connections[i]);
+    }
+    std::reverse(begin(this->connections), end(this->connections));
+}
 
 MockListener::~MockListener() {}
 
