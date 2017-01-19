@@ -2,6 +2,7 @@
 #define LISTENER_H
 
 #include <cstdint>
+#include <exception>
 #include <string>
 #include <sstream>
 #include "connection.h"
@@ -12,6 +13,12 @@ public:
 
     virtual void listen() = 0;
     virtual Connection* accept() = 0;
+};
+
+
+class ListenerError : public std::runtime_error {
+public:
+    ListenerError(std::string);
 };
 
 

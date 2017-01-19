@@ -50,6 +50,10 @@ MockListener::~MockListener() {}
 void MockListener::listen() { /* NOOP */ }
 
 Connection* MockListener::accept() {
+    if (connections.empty()) {
+        throw ListenerError("no more connections from mock listener");
+    }
+
     Connection* conn = connections.at(connections.size() - 1);
     connections.pop_back();
     return conn;

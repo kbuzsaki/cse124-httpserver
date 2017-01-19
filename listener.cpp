@@ -1,17 +1,17 @@
 #include <unistd.h>
-#include <iostream>
 #include <sys/socket.h>
+#include <sstream>
 #include <netinet/in.h>
 #include "listener.h"
 #include "util.h"
 
-using std::cerr;
-using std::endl;
+using std::stringstream;
 
 #define INVALID_SOCK (-1)
 #define QUEUE_SIZE (100)
 
-// TODO: add proper error handling via exceptions when connection stuff fails
+ListenerError::ListenerError(std::string message) : runtime_error(message) {}
+
 
 SocketListener::SocketListener(uint16_t port) {
     this->sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -24,8 +24,9 @@ SocketListener::SocketListener(uint16_t port) {
 
     int err = bind(this->sock, (struct sockaddr*) &target, sizeof(target));
     if (err < 0) {
-        cerr << "bind() failed: " << strerror(errno) << endl;
-        return;
+        stringstream error;
+        error << "bind() failed: " << strerror(errno);
+        throw ListenerError(error.str());
     }
 }
 
@@ -44,8 +45,9 @@ SocketListener::~SocketListener() {
 void SocketListener::listen() {
     int err = ::listen(sock, QUEUE_SIZE);
     if (err < 0) {
-        cerr << "listen() failed: " << strerror(errno) << endl;
-        return;
+        stringstream error;
+        error << "listen() failed: " << strerror(errno);
+        throw ListenerError(error.str());
     }
 }
 
@@ -55,7 +57,9 @@ Connection* SocketListener::accept() {
 
     int client_sock = ::accept(sock, (struct sockaddr*) &client_addr, &client_len);
     if (client_sock < 0) {
-        cerr << "accept() failed: " << strerror(errno) << endl;
+        stringstream error;
+        error << "accept() failed: " << strerror(errno);
+        throw ListenerError(error.str());
     }
 
     return new SocketConnection(client_sock);
