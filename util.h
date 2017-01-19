@@ -19,6 +19,13 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
     return os << "]";
 }
 
+template<typename T>
+std::string to_string(const T& val) {
+    std::stringstream buf;
+    buf << val;
+    return buf.str();
+}
+
 std::vector<std::string> split(std::string s, std::string sep);
 
 std::vector<std::string> split_n(std::string s, std::string sep, int n_splits);

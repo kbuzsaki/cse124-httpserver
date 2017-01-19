@@ -133,34 +133,42 @@ bool operator!=(const HttpResponse& lhs, const HttpResponse& rhs) {
 }
 
 
-HttpResponse not_found_response() {
-    HttpResponse response;
-    response.version = HTTP_VERSION_1_1;
-    response.status = NOT_FOUND_STATUS;
-    response.headers.push_back(HttpHeader{"Server", "TritonHTTP/0.1"});
-    response.headers.push_back(HttpHeader{"Content-Length", "0"});
-    response.body = "";
-    return response;
+const HttpHeader SERVER_HEADER = HttpHeader{"Server", "TritonHTTP/0.1"};
+const HttpHeader EMPTY_CONTENT_LENGTH = HttpHeader{"Content-Length", "0"};
+
+
+HttpResponse ok_response(string body) {
+    return HttpResponse{
+            HTTP_VERSION_1_1,
+            OK_STATUS,
+            vector<HttpHeader>{SERVER_HEADER, HttpHeader{"Content-Length", to_string(body.size())}},
+            body
+    };
+}
+
+HttpResponse error_response(HttpStatus status) {
+    return HttpResponse{
+            HTTP_VERSION_1_1,
+            status,
+            vector<HttpHeader>{SERVER_HEADER, EMPTY_CONTENT_LENGTH},
+            ""
+    };
 }
 
 HttpResponse bad_request_response() {
-    HttpResponse response;
-    response.version = HTTP_VERSION_1_1;
-    response.status = BAD_REQUEST_STATUS;
-    response.headers.push_back(HttpHeader{"Server", "TritonHTTP/0.1"});
-    response.headers.push_back(HttpHeader{"Content-Length", "0"});
-    response.body = "";
-    return response;
+    return error_response(BAD_REQUEST_STATUS);
+}
+
+HttpResponse forbidden_response() {
+    return error_response(FORBIDDEN_STATUS);
+}
+
+HttpResponse not_found_response() {
+    return error_response(NOT_FOUND_STATUS);
 }
 
 HttpResponse internal_server_error_response() {
-    HttpResponse response;
-    response.version = HTTP_VERSION_1_1;
-    response.status = INTERNAL_SERVER_ERROR_STATUS;
-    response.headers.push_back(HttpHeader{"Server", "TritonHTTP/0.1"});
-    response.headers.push_back(HttpHeader{"Content-Length", "0"});
-    response.body = "";
-    return response;
+    return error_response(INTERNAL_SERVER_ERROR_STATUS);
 }
 
 
