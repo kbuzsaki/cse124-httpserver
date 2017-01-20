@@ -36,4 +36,6 @@ size_t sstream_size(std::stringstream& buffer);
 
 std::string canonicalize_path(std::string path);
 
+bool ends_with(std::string s, std::string suffix);
+
 #endif //UTIL_H

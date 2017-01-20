@@ -102,4 +102,11 @@ string canonicalize_path(string path) {
     return "/" + join("/", valid_parts);
 }
 
+bool ends_with(string s, string suffix) {
+    if (suffix.size() > s.size()) {
+        return false;
+    }
+
+    return s.substr(s.size() - suffix.size(), s.size()) == suffix;
+}
 

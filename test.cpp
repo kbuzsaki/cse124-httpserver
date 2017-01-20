@@ -116,6 +116,13 @@ void test_canonicalize_path(TestRunner& runner) {
     runner.assert_equal(string(""), canonicalize_path("/foo/bar/../baz/../../../bar"), "canonicalize weird escaping path");
 }
 
+void test_ends_with(TestRunner& runner) {
+    runner.assert_equal(true, ends_with("", ""), "empty string ends with empty string");
+    runner.assert_equal(true, ends_with("foo.html", ".html"), "foo.html ends with .html");
+    runner.assert_equal(false, ends_with("bar.html.bak", ".html"), "bar.html.bak does not end with .html");
+    runner.assert_equal(false, ends_with("bar.html.bak", "foo.bar.html.bak"), "bar.html.bak does not end with foo.bar.html.bak");
+}
+
 void test_mock_connection(TestRunner& runner) {
     MockConnection empty_mock("");
     runner.assert_equal(string(""), empty_mock.read(), "empty mock fails to read empty string");
@@ -411,6 +418,7 @@ int main() {
 
     test_split(runner);
     test_canonicalize_path(runner);
+    test_ends_with(runner);
     test_mock_connection(runner);
     test_mock_listener(runner);
     test_mock_handler(runner);
