@@ -388,7 +388,7 @@ void test_http_server(TestRunner& runner) {
 
 void test_file_serving_handler(TestRunner& runner) {
     unordered_map<string, shared_ptr<File>> repository_map = {
-            {"/foo", make_shared<MockFile>(true, "foo contents here")},
+            {"/foo.html", make_shared<MockFile>(true, "foo.html contents here")},
             {"/bar", make_shared<MockFile>(false, "bar contents here")},
             {"/baz/car/tar", make_shared<MockFile>(true, "baz/car/tar contents here")}
     };
@@ -396,9 +396,9 @@ void test_file_serving_handler(TestRunner& runner) {
 
     FileServingHttpHandler handler(mock_repository);
 
-    HttpRequest foo_request = HttpRequest{"GET", "/foo", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
+    HttpRequest foo_request = HttpRequest{"GET", "/foo.html", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
     HttpResponse foo_response = handler.handle_request(foo_request);
-    runner.assert_equal(ok_response("foo contents here"), foo_response, "wrong response for good public file");
+    runner.assert_equal(ok_response("foo.html contents here", "text/html"), foo_response, "wrong response for good public file");
 
     HttpRequest bar_request = HttpRequest{"GET", "/bar", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
     HttpResponse bar_response = handler.handle_request(bar_request);
@@ -410,7 +410,7 @@ void test_file_serving_handler(TestRunner& runner) {
 
     HttpRequest nested_request = HttpRequest{"GET", "/baz/car/tar", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
     HttpResponse nested_response = handler.handle_request(nested_request);
-    runner.assert_equal(ok_response("baz/car/tar contents here"), nested_response, "wrong response for nested file");
+    runner.assert_equal(ok_response("baz/car/tar contents here", "text/plain"), nested_response, "wrong response for nested file");
 }
 
 int main() {

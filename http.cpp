@@ -137,11 +137,15 @@ const HttpHeader SERVER_HEADER = HttpHeader{"Server", "TritonHTTP/0.1"};
 const HttpHeader EMPTY_CONTENT_LENGTH = HttpHeader{"Content-Length", "0"};
 
 
-HttpResponse ok_response(string body) {
+HttpResponse ok_response(string body, string content_type) {
     return HttpResponse{
             HTTP_VERSION_1_1,
             OK_STATUS,
-            vector<HttpHeader>{SERVER_HEADER, HttpHeader{"Content-Length", to_string(body.size())}},
+            vector<HttpHeader>{
+                    SERVER_HEADER,
+                    HttpHeader{"Content-Length", to_string(body.size())},
+                    HttpHeader{"Content-Type", content_type}
+            },
             body
     };
 }

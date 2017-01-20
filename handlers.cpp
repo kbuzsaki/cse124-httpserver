@@ -4,9 +4,11 @@
 using std::shared_ptr;
 using std::string;
 
+string infer_content_type(string);
+
 FileServingHttpHandler::FileServingHttpHandler(shared_ptr<FileRepository> repository) : repository(repository) {}
 
-HttpResponse FileServingHttpHandler::handle_request(const HttpRequest& request) {
+HttpResponse FileServingHttpHandler::handle_request(const HttpRequest &request) {
     // TODO: test this or move it into repository code
     string path = canonicalize_path(request.uri);
     if (path == "") {
@@ -19,7 +21,20 @@ HttpResponse FileServingHttpHandler::handle_request(const HttpRequest& request) 
         return not_found_response();
     } else if (!file->world_readable()) {
         return forbidden_response();
-    } else {
-        return ok_response(file->contents());
     }
+
+    HttpResponse response = ok_response(file->contents(), infer_content_type(path));
+    return response;
+}
+
+// TODO: add tests for this, maybe move it somewhere else
+string infer_content_type(string filename) {
+    if (ends_with(filename, ".html")) {
+        return "text/html";
+    } else if (ends_with(filename, ".jpg")) {
+        return "image/jpeg";
+    } else if (ends_with(filename, ".png")) {
+        return "image/png";
+    }
+    return "text/plain";
 }

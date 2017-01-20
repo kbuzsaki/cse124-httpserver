@@ -76,7 +76,7 @@ const HttpStatus FORBIDDEN_STATUS = HttpStatus{403, "Forbidden"};
 const HttpStatus NOT_FOUND_STATUS = HttpStatus{404, "Not Found"};
 const HttpStatus INTERNAL_SERVER_ERROR_STATUS = HttpStatus{500, "Internal Server Error"};
 
-HttpResponse ok_response(std::string body);
+HttpResponse ok_response(std::string body, std::string content_type);
 HttpResponse bad_request_response();
 HttpResponse forbidden_response();
 HttpResponse not_found_response();
