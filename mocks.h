@@ -1,6 +1,7 @@
 #ifndef MOCKS_H
 #define MOCKS_H
 
+#include <memory>
 #include <unordered_map>
 #include "connection.h"
 #include "http.h"
@@ -44,14 +45,14 @@ public:
 
 class MockHttpHandler : public HttpHandler {
     HttpResponse response_payload;
-    std::vector<const HttpRequest> request_copies;
+    std::vector<HttpRequest> request_copies;
 
 public:
     MockHttpHandler(const HttpResponse& response);
 
     virtual HttpResponse handle_request(const HttpRequest&);
 
-    const std::vector<const HttpRequest>& requests();
+    const std::vector<HttpRequest>& requests();
 };
 
 

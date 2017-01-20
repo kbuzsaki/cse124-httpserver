@@ -45,14 +45,14 @@ string MockConnection::written() {
 
 
 MockListener::MockListener(vector<shared_ptr<Connection>> connections) : connections(connections) {
-    std::reverse(begin(this->connections), end(this->connections));
+    std::reverse(this->connections.begin(), this->connections.end());
 }
 
 MockListener::MockListener(std::vector<std::shared_ptr<MockConnection>> mock_connections) {
     for (size_t i = 0; i < mock_connections.size(); i++) {
         this->connections.push_back(mock_connections[i]);
     }
-    std::reverse(begin(this->connections), end(this->connections));
+    std::reverse(this->connections.begin(), this->connections.end());
 }
 
 MockListener::~MockListener() {}
@@ -77,7 +77,7 @@ HttpResponse MockHttpHandler::handle_request(const HttpRequest& request) {
     return response_payload;
 }
 
-const vector<const HttpRequest>& MockHttpHandler::requests() {
+const vector<HttpRequest>& MockHttpHandler::requests() {
     return request_copies;
 }
 
@@ -97,7 +97,7 @@ MockFileRepository::MockFileRepository(std::unordered_map<std::string, std::shar
 
 std::shared_ptr<File> MockFileRepository::get_file(std::string path) {
     if (mock_files.count(path) == 0) {
-        return NULL;
+        return shared_ptr<File>();
     }
 
     return mock_files.at(path);

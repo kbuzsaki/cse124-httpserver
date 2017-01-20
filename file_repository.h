@@ -1,6 +1,7 @@
 #ifndef FILE_SYSTEM_H
 #define FILE_SYSTEM_H
 
+#include <memory>
 #include <string>
 
 class File {

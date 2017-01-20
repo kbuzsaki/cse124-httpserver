@@ -66,12 +66,12 @@ bool SocketConnection::is_closed() {
 }
 
 
-BufferedConnection::BufferedConnection() : conn(NULL), buffer() {}
+BufferedConnection::BufferedConnection() : conn(), buffer() {}
 
 BufferedConnection::BufferedConnection(shared_ptr<Connection> conn) : conn(conn), buffer() {}
 
 BufferedConnection::BufferedConnection(BufferedConnection&& conn) : conn(conn.conn), buffer(conn.buffer.str()) {
-    conn.conn = NULL;
+    conn.conn = shared_ptr<Connection>();
 }
 
 BufferedConnection::~BufferedConnection() {
@@ -80,7 +80,7 @@ BufferedConnection::~BufferedConnection() {
 
 bool BufferedConnection::is_closed() {
     // TODO: is this acceptable behavior?
-    return conn == NULL || conn->is_closed();
+    return !conn || conn->is_closed();
 }
 
 void BufferedConnection::close() {

@@ -177,6 +177,8 @@ HttpRequestParseError::HttpRequestParseError(string message) : runtime_error(mes
 
 HttpConnection::HttpConnection(shared_ptr<Connection> conn) : conn(conn) {}
 
+HttpConnection::HttpConnection(HttpConnection&& http_conn) : conn(std::move(http_conn.conn)) {}
+
 HttpFrame HttpConnection::read_frame() {
     HttpFrame frame;
 

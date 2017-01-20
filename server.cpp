@@ -1,4 +1,5 @@
 #include <exception>
+#include <stdexcept>
 #include "server.h"
 
 using std::exception;
@@ -8,7 +9,7 @@ using std::shared_ptr;
 HttpListener::HttpListener(shared_ptr<Listener> listener) : listener(listener) {}
 
 HttpListener::HttpListener(HttpListener&& listener) : listener(listener.listener) {
-    listener.listener = NULL;
+    listener.listener = shared_ptr<Listener>();
 }
 
 void HttpListener::listen() {

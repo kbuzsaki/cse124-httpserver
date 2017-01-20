@@ -1,6 +1,7 @@
 #ifndef HANDLERS_H
 #define HANDLERS_H
 
+#include <memory>
 #include "file_repository.h"
 #include "server.h"
 

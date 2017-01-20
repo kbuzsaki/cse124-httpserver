@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sstream>
+#include "string.h"
 #include <netinet/in.h>
 #include "listener.h"
 #include "util.h"

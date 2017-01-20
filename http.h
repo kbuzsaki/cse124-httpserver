@@ -1,7 +1,7 @@
 #ifndef HTTP_H
 #define HTTP_H
 
-#include <exception>
+#include <stdexcept>
 #include <vector>
 #include "connection.h"
 
@@ -97,6 +97,8 @@ class HttpConnection {
 
 public:
     HttpConnection(std::shared_ptr<Connection> conn);
+    HttpConnection(HttpConnection&&);
+
     HttpRequest read_request();
     void write_response(HttpResponse);
 };

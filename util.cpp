@@ -82,7 +82,8 @@ string canonicalize_path(string path) {
     vector<string> valid_parts;
 
     vector<string> parts = split(path, "/");
-    for (auto& part : parts) {
+    for (size_t i = 0; i < parts.size(); i++) {
+        string& part = parts[i];
         if (part == "") {
             continue;
         } else if (part == ".") {

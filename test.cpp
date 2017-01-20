@@ -166,7 +166,8 @@ void test_mock_handler(TestRunner& runner) {
         {"GET", "/baz", HTTP_VERSION_1_0, vector<HttpHeader>{HttpHeader{"SomeOtherKey", "othersomevalue"}, HttpHeader{"foo", "bar"}}, ""}
     };
 
-    for (auto& request : requests) {
+    for (size_t i = 0; i < requests.size(); i++) {
+        HttpRequest& request = requests[i];
         HttpResponse received_response = mock_handler.handle_request(request);
         runner.assert_equal(request, mock_handler.requests()[mock_handler.requests().size() - 1], "stored request incorrect");
         runner.assert_equal(response, received_response, "received response incorrect");
@@ -191,10 +192,10 @@ void test_mock_file(TestRunner& runner) {
 void test_mock_file_repository(TestRunner& runner) {
     unordered_map<string, shared_ptr<File>> empty_map;
     MockFileRepository empty_repository(empty_map);
-    runner.assert_equal(shared_ptr<File>(NULL), empty_repository.get_file(""), "empty mock repository returned a non null file");
-    runner.assert_equal(shared_ptr<File>(NULL), empty_repository.get_file(""), "empty mock repository returned a non null file");
-    runner.assert_equal(shared_ptr<File>(NULL), empty_repository.get_file("foo"), "empty mock repository returned a non null file");
-    runner.assert_equal(shared_ptr<File>(NULL), empty_repository.get_file("foo"), "empty mock repository returned a non null file");
+    runner.assert_equal(shared_ptr<File>(), empty_repository.get_file(""), "empty mock repository returned a non null file");
+    runner.assert_equal(shared_ptr<File>(), empty_repository.get_file(""), "empty mock repository returned a non null file");
+    runner.assert_equal(shared_ptr<File>(), empty_repository.get_file("foo"), "empty mock repository returned a non null file");
+    runner.assert_equal(shared_ptr<File>(), empty_repository.get_file("foo"), "empty mock repository returned a non null file");
 
     shared_ptr<File> foo_file = make_shared<MockFile>(true, "foo contents here");
     shared_ptr<File> private_bar_file = make_shared<MockFile>(false, "bar contents here");
@@ -206,10 +207,10 @@ void test_mock_file_repository(TestRunner& runner) {
     };
     MockFileRepository full_repository(full_map);
 
-    runner.assert_equal(shared_ptr<File>(NULL), full_repository.get_file(""), "full mock repository returned a non null file for a missing file");
-    runner.assert_equal(shared_ptr<File>(NULL), full_repository.get_file(""), "full mock repository returned a non null file for a missing file");
-    runner.assert_equal(shared_ptr<File>(NULL), full_repository.get_file("/missing"), "full mock repository returned a non null file for a missing file");
-    runner.assert_equal(shared_ptr<File>(NULL), full_repository.get_file("/missing"), "full mock repository returned a non null file for a missing file");
+    runner.assert_equal(shared_ptr<File>(), full_repository.get_file(""), "full mock repository returned a non null file for a missing file");
+    runner.assert_equal(shared_ptr<File>(), full_repository.get_file(""), "full mock repository returned a non null file for a missing file");
+    runner.assert_equal(shared_ptr<File>(), full_repository.get_file("/missing"), "full mock repository returned a non null file for a missing file");
+    runner.assert_equal(shared_ptr<File>(), full_repository.get_file("/missing"), "full mock repository returned a non null file for a missing file");
     runner.assert_equal(foo_file, full_repository.get_file("/foo"), "full mock repository returned the wrong file for foo");
     runner.assert_equal(foo_file, full_repository.get_file("/foo"), "full mock repository returned the wrong file for foo");
     runner.assert_equal(private_bar_file, full_repository.get_file("/bar"), "full mock repository returned the wrong file for bar");
@@ -369,7 +370,7 @@ void test_http_server(TestRunner& runner) {
 
     server.serve();
 
-    runner.assert_equal(vector<const HttpRequest>{request_1, request_2, request_3}, mock_handler->requests(), "handler received requests incorrectly");
+    runner.assert_equal(vector<HttpRequest>{request_1, request_2, request_3}, mock_handler->requests(), "handler received requests incorrectly");
     // multiple success cases
     runner.assert_equal(response.pack().serialize(), mock_connections[0]->written(), "mock conn 1 received wrong response");
     runner.assert_equal(response.pack().serialize(), mock_connections[1]->written(), "mock conn 2 received wrong response");

@@ -9,6 +9,7 @@
 using std::ifstream;
 using std::istreambuf_iterator;
 using std::make_shared;
+using std::shared_ptr;
 using std::string;
 
 
@@ -31,7 +32,7 @@ DirectoryFileRepository::DirectoryFileRepository(std::string directory_path) : d
 std::shared_ptr<File> DirectoryFileRepository::get_file(std::string path) {
     string file_path = directory_path + "/" + path;
     if (access(file_path.c_str(), F_OK) < 0) {
-        return NULL;
+        return shared_ptr<File>();
     }
 
     return make_shared<PathFile>(directory_path + "/" + path);

@@ -2,7 +2,8 @@
 #define LISTENER_H
 
 #include <cstdint>
-#include <exception>
+#include <memory>
+#include <stdexcept>
 #include <string>
 #include <sstream>
 #include "connection.h"
