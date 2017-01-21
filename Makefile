@@ -1,33 +1,41 @@
-
-CC=g++
-CFLAGS=-std=c++0x -ggdb -Wall -Wextra -pedantic -Werror
-CXXFLAGS=$(CFLAGS)
+CXX = g++
+CCC = g++
+CFLAGS = -std=c++0x -ggdb -Wall -Wextra -pedantic -Werror
+CXXFLAGS = $(CFLAGS)
 DEPS = httpd.h connection.h util.h http.h server.h mocks.h listener.h handlers.h file_repository.h
 SRCS = httpd.cpp connection.cpp util.cpp http.cpp server.cpp mocks.cpp listener.cpp handlers.cpp file_repository.cpp
-MAIN_SRCS = main.c $(SRCS)
-MAIN_OBJS = $(MAIN_SRCS:.c=.o)
-TEST_SRCS = test.c $(SRCS)
-TEST_OBJS = $(TEST_SRCS:.c=.o)
+OBJ_DIR = build
+MAIN_SRCS = main.cpp $(SRCS)
+MAIN_OBJS = $(MAIN_SRCS:%.cpp=$(OBJ_DIR)/%.o)
+TEST_SRCS = test.cpp $(SRCS)
+TEST_OBJS = $(TEST_SRCS:%.cpp=$(OBJ_DIR)/%.o)
 
-default: httpd
 
-%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+.PHONY: default run test dirs clean
 
-httpd:    $(MAIN_OBJS)
-	$(CC) $(CFLAGS) -o httpd $(MAIN_OBJS) -lpthread
 
-run: httpd
+default: dirs httpd
+
+$(OBJ_DIR)/%.o: %.cpp $(DEPS)
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+httpd: $(MAIN_OBJS)
+	$(CXX) $(CXXFLAGS) -o httpd $(MAIN_OBJS) -lpthread
+
+run: dirs httpd
 	./httpd 6060 files
 
 test_httpd: $(TEST_OBJS)
-	$(CC) $(CFLAGS) -o test_httpd $(TEST_OBJS) -lpthread
+	$(CXX) $(CXXFLAGS) -o test_httpd $(TEST_OBJS) -lpthread
 
-test: test_httpd
+test: dirs test_httpd
 	./test_httpd
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f httpd test_httpd *.o
+	rm -rf httpd test_httpd *.o $(OBJ_DIR)
+
+dirs:
+	mkdir -p $(OBJ_DIR)
