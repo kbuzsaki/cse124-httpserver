@@ -365,10 +365,12 @@ void test_http_listener(TestRunner& runner) {
 }
 
 void test_http_server(TestRunner& runner) {
-    HttpRequest request_1{"GET", "/foo/bar", HTTP_VERSION_1_0, vector<HttpHeader>{{"MyHeader", "myval"}}, ""};
-    HttpRequest request_2{"GET", "/", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}}, ""};
-    HttpRequest request_3{"GET", "/foo/bar/baz", HTTP_VERSION_0_9, vector<HttpHeader>{{"MyHeader", "myval3"}}, ""};
+    HttpRequest bad_request{"GET", "/foo/bar", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}}, ""};
+    HttpRequest request_1{"GET", "/foo/bar", HTTP_VERSION_1_0, vector<HttpHeader>{{"Host", "foo"}, {"MyHeader", "myval"}}, ""};
+    HttpRequest request_2{"GET", "/", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}, {"Host", "bar"}}, ""};
+    HttpRequest request_3{"GET", "/foo/bar/baz", HTTP_VERSION_0_9, vector<HttpHeader>{{"Host", "foobar.com"}, {"MyHeader", "myval3"}}, ""};
     vector<shared_ptr<MockConnection>> mock_connections = {
+            make_shared<MockConnection>(bad_request.pack().serialize()),
             make_shared<MockConnection>(request_1.pack().serialize()),
             make_shared<MockConnection>(request_2.pack().serialize()),
             make_shared<MockConnection>(request_3.pack().serialize()),
@@ -384,12 +386,14 @@ void test_http_server(TestRunner& runner) {
     server.serve();
 
     runner.assert_equal(vector<HttpRequest>{request_1, request_2, request_3}, mock_handler->requests(), "handler received requests incorrectly");
+    // missing host header case
+    runner.assert_equal(bad_request_response().pack().serialize(), mock_connections[0]->written(), "mock bad request conn received wrong response");
     // multiple success cases
-    runner.assert_equal(response.pack().serialize(), mock_connections[0]->written(), "mock conn 1 received wrong response");
-    runner.assert_equal(response.pack().serialize(), mock_connections[1]->written(), "mock conn 2 received wrong response");
-    runner.assert_equal(response.pack().serialize(), mock_connections[2]->written(), "mock conn 3 received wrong response");
+    runner.assert_equal(response.pack().serialize(), mock_connections[1]->written(), "mock conn 1 received wrong response");
+    runner.assert_equal(response.pack().serialize(), mock_connections[2]->written(), "mock conn 2 received wrong response");
+    runner.assert_equal(response.pack().serialize(), mock_connections[3]->written(), "mock conn 3 received wrong response");
     // malformed request case
-    runner.assert_equal(bad_request_response().pack().serialize(), mock_connections[3]->written(), "mock conn 4 received wrong response");
+    runner.assert_equal(bad_request_response().pack().serialize(), mock_connections[4]->written(), "mock malformed request conn received wrong response");
 }
 
 void test_file_serving_handler(TestRunner& runner) {

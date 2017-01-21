@@ -32,8 +32,12 @@ void HttpServer::serve() {
 
             try {
                 HttpRequest request = conn.read_request();
-                HttpResponse response = handler->handle_request(request);
-                conn.write_response(response);
+                if (!has_header(request.headers, "Host")) {
+                    conn.write_response(bad_request_response());
+                } else {
+                    HttpResponse response = handler->handle_request(request);
+                    conn.write_response(response);
+                }
             } catch (HttpRequestParseError&) {
                 conn.write_response(bad_request_response());
             } catch (exception&) {

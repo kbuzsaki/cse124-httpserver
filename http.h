@@ -32,6 +32,8 @@ std::ostream& operator<<(std::ostream&, const HttpHeader&);
 bool operator==(const HttpHeader&, const HttpHeader&);
 bool operator!=(const HttpHeader&, const HttpHeader&);
 
+bool has_header(const std::vector<HttpHeader>& headers, std::string key);
+
 
 struct HttpRequest {
     std::string method;
