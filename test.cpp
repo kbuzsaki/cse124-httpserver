@@ -118,6 +118,10 @@ void test_canonicalize_path(TestRunner& runner) {
     runner.assert_equal(string(""), canonicalize_path("/foo/bar/../baz/../../../bar"), "canonicalize weird escaping path");
 }
 
+void test_to_http_date(TestRunner& runner) {
+    runner.assert_equal(string("Sat, 19 Mar 2016 06:19:24 UTC"), to_http_date(make_time_point(2016, 3, 19, 6, 19, 24)), "to http date: 2016/03/19 6:19:24");
+}
+
 void test_ends_with(TestRunner& runner) {
     runner.assert_equal(true, ends_with("", ""), "empty string ends with empty string");
     runner.assert_equal(true, ends_with("foo.html", ".html"), "foo.html ends with .html");
@@ -428,6 +432,7 @@ int main() {
 
     test_split(runner);
     test_canonicalize_path(runner);
+    test_to_http_date(runner);
     test_ends_with(runner);
     test_mock_connection(runner);
     test_mock_listener(runner);

@@ -40,6 +40,8 @@ std::string canonicalize_path(std::string path);
 bool ends_with(std::string s, std::string suffix);
 
 
+std::chrono::system_clock::time_point make_time_point(int years, int months, int days, int hours, int minutes, int seconds);
+
 std::chrono::system_clock::time_point to_time_point(time_t t);
 
 std::string to_http_date(const std::chrono::system_clock::time_point& tp);

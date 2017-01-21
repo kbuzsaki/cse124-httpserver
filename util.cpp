@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <ctime>
 #include <iostream>
+#include <string.h>
 #include "util.h"
 
 using std::chrono::system_clock;
@@ -112,6 +113,21 @@ bool ends_with(string s, string suffix) {
     return s.substr(s.size() - suffix.size(), s.size()) == suffix;
 }
 
+
+system_clock::time_point make_time_point(int years, int months, int days, int hours, int minutes, int seconds) {
+    struct tm t;
+    bzero(&t, sizeof(t));
+
+    // convert from absolute to epoch values
+    t.tm_year = years - 1900;
+    t.tm_mon = months - 1;
+    t.tm_mday = days;
+    t.tm_hour = hours;
+    t.tm_min = minutes;
+    t.tm_sec = seconds;
+
+    return system_clock::from_time_t(timegm(&t));
+}
 
 system_clock::time_point to_time_point(time_t t) {
     system_clock::duration d = std::chrono::duration_cast<system_clock::duration>(std::chrono::seconds(t));
