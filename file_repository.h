@@ -1,6 +1,7 @@
 #ifndef FILE_SYSTEM_H
 #define FILE_SYSTEM_H
 
+#include <chrono>
 #include <memory>
 #include <string>
 
@@ -10,6 +11,7 @@ public:
 
     virtual bool world_readable() = 0;
     virtual std::string contents() = 0;
+    virtual std::chrono::system_clock::time_point last_modified() = 0;
 };
 
 
@@ -29,6 +31,7 @@ public:
 
     virtual bool world_readable();
     virtual std::string contents();
+    virtual std::chrono::system_clock::time_point last_modified();
 };
 
 

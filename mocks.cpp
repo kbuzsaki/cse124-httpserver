@@ -3,6 +3,7 @@
 #include "util.h"
 #include "mocks.h"
 
+using std::chrono::system_clock;
 using std::shared_ptr;
 using std::string;
 using std::vector;
@@ -82,7 +83,8 @@ const vector<HttpRequest>& MockHttpHandler::requests() {
 }
 
 
-MockFile::MockFile(const bool& world_readable, const std::string& contents) : world_readable_payload(world_readable), contents_payload(contents) {}
+MockFile::MockFile(const bool& world_readable, const string& contents, const system_clock::time_point& last_modified)
+        : world_readable_payload(world_readable), contents_payload(contents), last_modified_payload(last_modified) {}
 
 bool MockFile::world_readable() {
     return world_readable_payload;
@@ -90,6 +92,10 @@ bool MockFile::world_readable() {
 
 std::string MockFile::contents() {
     return contents_payload;
+}
+
+system_clock::time_point MockFile::last_modified() {
+    return last_modified_payload;
 }
 
 

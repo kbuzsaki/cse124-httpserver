@@ -5,7 +5,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "file_repository.h"
+#include "util.h"
 
+using std::chrono::system_clock;
 using std::ifstream;
 using std::istreambuf_iterator;
 using std::make_shared;
@@ -24,6 +26,12 @@ bool PathFile::world_readable() {
 std::string PathFile::contents() {
     ifstream file_stream(file_path);
     return string(istreambuf_iterator<char>(file_stream), istreambuf_iterator<char>());
+}
+
+system_clock::time_point PathFile::last_modified() {
+    struct stat file_stat;
+    ::stat(file_path.c_str(), &file_stat);
+    return to_time_point(file_stat.st_mtime);
 }
 
 

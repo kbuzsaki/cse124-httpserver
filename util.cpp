@@ -1,7 +1,9 @@
 #include <algorithm>
+#include <ctime>
 #include <iostream>
 #include "util.h"
 
+using std::chrono::system_clock;
 using std::ios;
 using std::max;
 using std::min;
@@ -108,5 +110,24 @@ bool ends_with(string s, string suffix) {
     }
 
     return s.substr(s.size() - suffix.size(), s.size()) == suffix;
+}
+
+
+system_clock::time_point to_time_point(time_t t) {
+    system_clock::duration d = std::chrono::duration_cast<system_clock::duration>(std::chrono::seconds(t));
+    return system_clock::time_point(d);
+}
+
+std::string to_http_date(const system_clock::time_point& tp) {
+    char buf[1024];
+    time_t t = system_clock::to_time_t(tp);
+    struct tm tm = *gmtime(&t);
+    // TODO: check this return value?
+    strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
+    return string(buf);
+}
+
+std::ostream &operator<<(std::ostream &os, const system_clock::time_point &tp) {
+    return os << to_http_date(tp);
 }
 

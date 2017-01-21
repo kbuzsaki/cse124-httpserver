@@ -59,12 +59,14 @@ public:
 class MockFile : public File {
     const bool world_readable_payload;
     const std::string contents_payload;
+    const std::chrono::system_clock::time_point last_modified_payload;
 
 public:
-    MockFile(const bool& world_readable_payload, const std::string& contents_payload);
+    MockFile(const bool& world_readable, const std::string& contents, const std::chrono::system_clock::time_point& last_modified);
 
     virtual bool world_readable();
     virtual std::string contents();
+    virtual std::chrono::system_clock::time_point last_modified();
 };
 
 

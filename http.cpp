@@ -3,6 +3,7 @@
 #include "http.h"
 #include "util.h"
 
+using std::chrono::system_clock;
 using std::ostream;
 using std::shared_ptr;
 using std::string;
@@ -137,14 +138,15 @@ const HttpHeader SERVER_HEADER = HttpHeader{"Server", "TritonHTTP/0.1"};
 const HttpHeader EMPTY_CONTENT_LENGTH = HttpHeader{"Content-Length", "0"};
 
 
-HttpResponse ok_response(string body, string content_type) {
+HttpResponse ok_response(string body, string content_type, system_clock::time_point last_modified) {
     return HttpResponse{
             HTTP_VERSION_1_1,
             OK_STATUS,
             vector<HttpHeader>{
                     SERVER_HEADER,
                     HttpHeader{"Content-Length", to_string(body.size())},
-                    HttpHeader{"Content-Type", content_type}
+                    HttpHeader{"Content-Type", content_type},
+                    HttpHeader{"Last-Modified", to_http_date(last_modified)}
             },
             body
     };

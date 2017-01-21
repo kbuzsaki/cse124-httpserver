@@ -1,3 +1,4 @@
+#include <chrono>
 #include <iostream>
 #include <vector>
 #include "connection.h"
@@ -9,6 +10,7 @@
 #include "util.h"
 
 using namespace std;
+using std::chrono::system_clock;
 
 class TestRunner {
     int passes;
@@ -182,16 +184,20 @@ void test_mock_handler(TestRunner& runner) {
 }
 
 void test_mock_file(TestRunner& runner) {
-    MockFile public_file(true, "some stuff");
+    // FIXME: make this not dependent on the system time
+    system_clock::time_point now = system_clock::now();
+    MockFile public_file(true, "some stuff", now);
     runner.assert_equal(true, public_file.world_readable(), "mock public file was not public");
     runner.assert_equal(string("some stuff"), public_file.contents(), "mock public file had wrong contents");
+    runner.assert_equal(now, public_file.last_modified(), "mock public file had wrong last modified");
 
-    MockFile empty_file(true, "");
+    MockFile empty_file(true, "", system_clock::time_point());
     runner.assert_equal(true, empty_file.world_readable(), "mock empty file was not public");
     runner.assert_equal(string(""), empty_file.contents(), "mock empty file had wrong contents");
+    runner.assert_equal(system_clock::time_point(), empty_file.last_modified(), "mock empty file had wrong last modified");
 
     // TODO: should a private file not have any contents?
-    MockFile private_file(false, "some other stuff");
+    MockFile private_file(false, "some other stuff", system_clock::time_point());
     runner.assert_equal(false, private_file.world_readable(), "mock private file was not private");
     runner.assert_equal(string("some other stuff"), private_file.contents(), "mock private file had wrong contents");
 }
@@ -204,9 +210,9 @@ void test_mock_file_repository(TestRunner& runner) {
     runner.assert_equal(shared_ptr<File>(), empty_repository.get_file("foo"), "empty mock repository returned a non null file");
     runner.assert_equal(shared_ptr<File>(), empty_repository.get_file("foo"), "empty mock repository returned a non null file");
 
-    shared_ptr<File> foo_file = make_shared<MockFile>(true, "foo contents here");
-    shared_ptr<File> private_bar_file = make_shared<MockFile>(false, "bar contents here");
-    shared_ptr<File> nested_file = make_shared<MockFile>(true, "baz/car/tar contents here");
+    shared_ptr<File> foo_file = make_shared<MockFile>(true, "foo contents here", system_clock::time_point());
+    shared_ptr<File> private_bar_file = make_shared<MockFile>(false, "bar contents here", system_clock::time_point());
+    shared_ptr<File> nested_file = make_shared<MockFile>(true, "baz/car/tar contents here", system_clock::time_point());
     unordered_map<string, shared_ptr<File>> full_map = {
             {"/foo", foo_file},
             {"/bar", private_bar_file},
@@ -388,9 +394,9 @@ void test_http_server(TestRunner& runner) {
 
 void test_file_serving_handler(TestRunner& runner) {
     unordered_map<string, shared_ptr<File>> repository_map = {
-            {"/foo.html", make_shared<MockFile>(true, "foo.html contents here")},
-            {"/bar", make_shared<MockFile>(false, "bar contents here")},
-            {"/baz/car/tar", make_shared<MockFile>(true, "baz/car/tar contents here")}
+            {"/foo.html", make_shared<MockFile>(true, "foo.html contents here", system_clock::time_point())},
+            {"/bar", make_shared<MockFile>(false, "bar contents here", system_clock::time_point())},
+            {"/baz/car/tar", make_shared<MockFile>(true, "baz/car/tar contents here", system_clock::time_point())}
     };
     shared_ptr<MockFileRepository> mock_repository = make_shared<MockFileRepository>(repository_map);
 
@@ -398,7 +404,7 @@ void test_file_serving_handler(TestRunner& runner) {
 
     HttpRequest foo_request = HttpRequest{"GET", "/foo.html", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
     HttpResponse foo_response = handler.handle_request(foo_request);
-    runner.assert_equal(ok_response("foo.html contents here", "text/html"), foo_response, "wrong response for good public file");
+    runner.assert_equal(ok_response("foo.html contents here", "text/html", system_clock::time_point()), foo_response, "wrong response for good public file");
 
     HttpRequest bar_request = HttpRequest{"GET", "/bar", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
     HttpResponse bar_response = handler.handle_request(bar_request);
@@ -410,7 +416,7 @@ void test_file_serving_handler(TestRunner& runner) {
 
     HttpRequest nested_request = HttpRequest{"GET", "/baz/car/tar", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
     HttpResponse nested_response = handler.handle_request(nested_request);
-    runner.assert_equal(ok_response("baz/car/tar contents here", "text/plain"), nested_response, "wrong response for nested file");
+    runner.assert_equal(ok_response("baz/car/tar contents here", "text/plain", system_clock::time_point()), nested_response, "wrong response for nested file");
 }
 
 int main() {

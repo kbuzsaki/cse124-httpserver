@@ -2,6 +2,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <chrono>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -37,5 +38,12 @@ size_t sstream_size(std::stringstream& buffer);
 std::string canonicalize_path(std::string path);
 
 bool ends_with(std::string s, std::string suffix);
+
+
+std::chrono::system_clock::time_point to_time_point(time_t t);
+
+std::string to_http_date(const std::chrono::system_clock::time_point& tp);
+
+std::ostream& operator<<(std::ostream& os, const std::chrono::system_clock::time_point& tp);
 
 #endif //UTIL_H

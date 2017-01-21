@@ -23,7 +23,7 @@ HttpResponse FileServingHttpHandler::handle_request(const HttpRequest &request) 
         return forbidden_response();
     }
 
-    HttpResponse response = ok_response(file->contents(), infer_content_type(path));
+    HttpResponse response = ok_response(file->contents(), infer_content_type(path), file->last_modified());
     return response;
 }
 
