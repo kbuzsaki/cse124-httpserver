@@ -150,7 +150,14 @@ std::string to_http_date(const system_clock::time_point& tp) {
     struct tm tm = *gmtime(&t);
     // TODO: check this return value?
     strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
-    return string(buf);
+
+    // check for and replace utc suffix
+    string s = string(buf);
+    if (ends_with(s, "UTC")) {
+        s.replace(s.size() - strlen("UTC"), strlen("UTC"), "GMT");
+    }
+
+    return s;
 }
 
 std::ostream &operator<<(std::ostream &os, const system_clock::time_point &tp) {
