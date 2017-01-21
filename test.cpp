@@ -1,5 +1,6 @@
 #include <chrono>
 #include <iostream>
+#include <stdexcept>
 #include <vector>
 #include "connection.h"
 #include "http.h"
@@ -120,6 +121,14 @@ void test_canonicalize_path(TestRunner& runner) {
 
 void test_to_http_date(TestRunner& runner) {
     runner.assert_equal(string("Sat, 19 Mar 2016 06:19:24 UTC"), to_http_date(make_time_point(2016, 3, 19, 6, 19, 24)), "to http date: 2016/03/19 6:19:24");
+    runner.assert_equal(string("Thu, 01 Jan 1970 00:00:00 UTC"), to_http_date(make_time_point(1970, 1, 1, 0, 0, 0)), "to http date: 1970/01/01 0:00:00");
+
+    try {
+        make_time_point(1969, 12, 31, 23, 59, 59);
+        runner.fail("make time point before epoch");
+    } catch (runtime_error&) {
+        runner.pass();
+    }
 }
 
 void test_ends_with(TestRunner& runner) {

@@ -2,12 +2,14 @@
 #include <ctime>
 #include <iostream>
 #include <string.h>
+#include <stdexcept>
 #include "util.h"
 
 using std::chrono::system_clock;
 using std::ios;
 using std::max;
 using std::min;
+using std::runtime_error;
 using std::string;
 using std::stringstream;
 using std::vector;
@@ -126,7 +128,15 @@ system_clock::time_point make_time_point(int years, int months, int days, int ho
     t.tm_min = minutes;
     t.tm_sec = seconds;
 
-    return system_clock::from_time_t(timegm(&t));
+    time_t tt = timegm(&t);
+    if (tt < 0) {
+        stringstream error;
+        error << "make_time_point(" << years << ", " << months << ", " << days << ", " << hours << ", " << minutes
+              << ", " << seconds << "): " << strerror(errno);
+        throw runtime_error(error.str());
+    }
+
+    return system_clock::from_time_t(tt);
 }
 
 system_clock::time_point to_time_point(time_t t) {
