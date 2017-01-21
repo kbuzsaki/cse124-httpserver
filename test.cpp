@@ -188,12 +188,11 @@ void test_mock_handler(TestRunner& runner) {
 }
 
 void test_mock_file(TestRunner& runner) {
-    // FIXME: make this not dependent on the system time
-    system_clock::time_point now = system_clock::now();
-    MockFile public_file(true, "some stuff", now);
+    system_clock::time_point public_file_time = make_time_point(1995, 12, 14, 2, 24, 3);
+    MockFile public_file(true, "some stuff", public_file_time);
     runner.assert_equal(true, public_file.world_readable(), "mock public file was not public");
     runner.assert_equal(string("some stuff"), public_file.contents(), "mock public file had wrong contents");
-    runner.assert_equal(now, public_file.last_modified(), "mock public file had wrong last modified");
+    runner.assert_equal(public_file_time, public_file.last_modified(), "mock public file had wrong last modified");
 
     MockFile empty_file(true, "", system_clock::time_point());
     runner.assert_equal(true, empty_file.world_readable(), "mock empty file was not public");
@@ -401,8 +400,9 @@ void test_http_server(TestRunner& runner) {
 }
 
 void test_file_serving_handler(TestRunner& runner) {
+    system_clock::time_point foo_file_time = make_time_point(2004, 1, 31, 2, 2, 2);
     unordered_map<string, shared_ptr<File>> repository_map = {
-            {"/foo.html", make_shared<MockFile>(true, "foo.html contents here", system_clock::time_point())},
+            {"/foo.html", make_shared<MockFile>(true, "foo.html contents here", foo_file_time)},
             {"/bar", make_shared<MockFile>(false, "bar contents here", system_clock::time_point())},
             {"/baz/car/tar", make_shared<MockFile>(true, "baz/car/tar contents here", system_clock::time_point())}
     };
@@ -412,7 +412,7 @@ void test_file_serving_handler(TestRunner& runner) {
 
     HttpRequest foo_request = HttpRequest{"GET", "/foo.html", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
     HttpResponse foo_response = handler.handle_request(foo_request);
-    runner.assert_equal(ok_response("foo.html contents here", "text/html", system_clock::time_point()), foo_response, "wrong response for good public file");
+    runner.assert_equal(ok_response("foo.html contents here", "text/html", foo_file_time), foo_response, "wrong response for good public file");
 
     HttpRequest bar_request = HttpRequest{"GET", "/bar", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
     HttpResponse bar_response = handler.handle_request(bar_request);
