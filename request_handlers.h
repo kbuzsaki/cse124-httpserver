@@ -5,7 +5,7 @@
 #include "file_repository.h"
 #include "server.h"
 
-class FileServingHttpHandler : public HttpHandler {
+class FileServingHttpHandler : public HttpRequestHandler {
     std::shared_ptr<FileRepository> repository;
 
 public:

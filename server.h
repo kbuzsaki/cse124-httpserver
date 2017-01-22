@@ -17,9 +17,9 @@ public:
 };
 
 
-class HttpHandler {
+class HttpRequestHandler {
 public:
-    virtual ~HttpHandler() {};
+    virtual ~HttpRequestHandler() {};
 
     virtual HttpResponse handle_request(const HttpRequest&) = 0;
 };
@@ -27,10 +27,10 @@ public:
 
 class HttpServer {
     HttpListener listener;
-    std::shared_ptr<HttpHandler> handler;
+    std::shared_ptr<HttpRequestHandler> handler;
 
 public:
-    HttpServer(HttpListener&&, std::shared_ptr<HttpHandler>);
+    HttpServer(HttpListener&&, std::shared_ptr<HttpRequestHandler>);
 
     void serve();
 };

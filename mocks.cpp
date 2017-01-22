@@ -71,14 +71,14 @@ shared_ptr<Connection> MockListener::accept() {
 }
 
 
-MockHttpHandler::MockHttpHandler(const HttpResponse &response) : response_payload(response), request_copies() {}
+MockHttpRequestHandler::MockHttpRequestHandler(const HttpResponse &response) : response_payload(response), request_copies() {}
 
-HttpResponse MockHttpHandler::handle_request(const HttpRequest& request) {
+HttpResponse MockHttpRequestHandler::handle_request(const HttpRequest& request) {
     request_copies.push_back(request);
     return response_payload;
 }
 
-const vector<HttpRequest>& MockHttpHandler::requests() {
+const vector<HttpRequest>& MockHttpRequestHandler::requests() {
     return request_copies;
 }
 

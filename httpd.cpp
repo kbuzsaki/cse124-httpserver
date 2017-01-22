@@ -4,7 +4,7 @@
 #include "http.h"
 #include "server.h"
 #include "file_repository.h"
-#include "handlers.h"
+#include "request_handlers.h"
 
 using std::cerr;
 using std::cout;
@@ -16,7 +16,7 @@ using std::endl;
 #define QUEUE_SIZE (100)
 #define BUFFER_SIZE (2000)
 
-class LoggingHttpHandler : public HttpHandler {
+class LoggingHttpRequestHandler : public HttpRequestHandler {
 
 public:
     HttpResponse handle_request(const HttpRequest& request) {

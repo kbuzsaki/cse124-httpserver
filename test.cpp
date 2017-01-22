@@ -4,7 +4,7 @@
 #include <vector>
 #include "connection.h"
 #include "http.h"
-#include "handlers.h"
+#include "request_handlers.h"
 #include "listener.h"
 #include "mocks.h"
 #include "server.h"
@@ -180,7 +180,7 @@ void test_mock_listener(TestRunner& runner) {
 
 void test_mock_handler(TestRunner& runner) {
     HttpResponse response = HttpResponse{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"OtherKey", "othervalue"}}, ""};
-    MockHttpHandler mock_handler(response);
+    MockHttpRequestHandler mock_handler(response);
 
     vector<HttpRequest> requests = {
         {"GET", "/foo/bar", HTTP_VERSION_1_1, vector<HttpHeader>{HttpHeader{"SomeKey", "somevalue"}}, ""},
@@ -391,7 +391,7 @@ void test_http_server(TestRunner& runner) {
     shared_ptr<MockListener> mock_listener = make_shared<MockListener>(mock_connections);
 
     HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"OtherKey", "othervalue"}}, ""};
-    shared_ptr<MockHttpHandler> mock_handler = make_shared<MockHttpHandler>(response);
+    shared_ptr<MockHttpRequestHandler> mock_handler = make_shared<MockHttpRequestHandler>(response);
 
     HttpServer server(HttpListener(mock_listener), mock_handler);
 
