@@ -28,6 +28,9 @@ run: dirs httpd
 test_httpd: $(TEST_OBJS)
 	$(CXX) $(CXXFLAGS) -o test_httpd $(TEST_OBJS) -lpthread
 
+itest: dirs httpd
+	./integration_test.py
+
 test: dirs test_httpd
 	./test_httpd
 
