@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <vector>
 #include "connection.h"
+#include "connection_handlers.h"
 #include "http.h"
 #include "request_handlers.h"
 #include "listener.h"
@@ -391,13 +392,14 @@ void test_http_server(TestRunner& runner) {
     shared_ptr<MockListener> mock_listener = make_shared<MockListener>(mock_connections);
 
     HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"OtherKey", "othervalue"}}, ""};
-    shared_ptr<MockHttpRequestHandler> mock_handler = make_shared<MockHttpRequestHandler>(response);
+    shared_ptr<MockHttpRequestHandler> mock_request_handler = make_shared<MockHttpRequestHandler>(response);
+    shared_ptr<HttpConnectionHandler> connection_handler = make_shared<BlockingHttpConnectionHandler>(mock_request_handler);
 
-    HttpServer server(HttpListener(mock_listener), mock_handler);
+    HttpServer server(HttpListener(mock_listener), connection_handler);
 
     server.serve();
 
-    runner.assert_equal(vector<HttpRequest>{request_1, request_2, request_3}, mock_handler->requests(), "handler received requests incorrectly");
+    runner.assert_equal(vector<HttpRequest>{request_1, request_2, request_3}, mock_request_handler->requests(), "handler received requests incorrectly");
     // missing host header case
     runner.assert_equal(bad_request_response().pack().serialize(), mock_connections[0]->written(), "mock bad request conn received wrong response");
     // multiple success cases

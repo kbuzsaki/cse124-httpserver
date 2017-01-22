@@ -25,12 +25,20 @@ public:
 };
 
 
+class HttpConnectionHandler {
+public:
+    virtual ~HttpConnectionHandler() {};
+
+    virtual void handle_connection(HttpConnection&&) = 0;
+};
+
+
 class HttpServer {
     HttpListener listener;
-    std::shared_ptr<HttpRequestHandler> handler;
+    std::shared_ptr<HttpConnectionHandler> handler;
 
 public:
-    HttpServer(HttpListener&&, std::shared_ptr<HttpRequestHandler>);
+    HttpServer(HttpListener&&, std::shared_ptr<HttpConnectionHandler>);
 
     void serve();
 };

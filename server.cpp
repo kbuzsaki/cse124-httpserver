@@ -1,8 +1,5 @@
-#include <exception>
-#include <stdexcept>
 #include "server.h"
 
-using std::exception;
 using std::shared_ptr;
 
 
@@ -21,28 +18,14 @@ HttpConnection HttpListener::accept() {
 }
 
 
-HttpServer::HttpServer(HttpListener&& listener, shared_ptr<HttpRequestHandler> handler) : listener(std::move(listener)), handler(handler) {}
+HttpServer::HttpServer(HttpListener&& listener, shared_ptr<HttpConnectionHandler> handler) : listener(std::move(listener)), handler(handler) {}
 
 void HttpServer::serve() {
     listener.listen();
 
     while (true) {
         try {
-            HttpConnection conn = listener.accept();
-
-            try {
-                HttpRequest request = conn.read_request();
-                if (!has_header(request.headers, "Host")) {
-                    conn.write_response(bad_request_response());
-                } else {
-                    HttpResponse response = handler->handle_request(request);
-                    conn.write_response(response);
-                }
-            } catch (HttpRequestParseError&) {
-                conn.write_response(bad_request_response());
-            } catch (exception&) {
-                conn.write_response(internal_server_error_response());
-            }
+            handler->handle_connection(listener.accept());
         } catch (ListenerError&) {
             // TODO: make this log somehow?
             return;

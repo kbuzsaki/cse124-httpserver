@@ -1,6 +1,7 @@
 #include <iostream>
 #include "httpd.h"
 #include "connection.h"
+#include "connection_handlers.h"
 #include "http.h"
 #include "server.h"
 #include "file_repository.h"
@@ -38,6 +39,8 @@ void start_httpd(unsigned short port, string doc_root) {
     cerr << "Starting server (port: " << port << ", doc_root: " << doc_root << ")" << endl;
 
     shared_ptr<FileRepository> repository = make_shared<DirectoryFileRepository>(doc_root);
-    HttpServer server(HttpListener(make_shared<SocketListener>(port)), make_shared<FileServingHttpHandler>(repository));
+    shared_ptr<HttpRequestHandler> request_handler = make_shared<FileServingHttpHandler>(repository);
+    shared_ptr<HttpConnectionHandler> connection_handler = make_shared<BlockingHttpConnectionHandler>(request_handler);
+    HttpServer server(HttpListener(make_shared<SocketListener>(port)), connection_handler);
     server.serve();
 }
