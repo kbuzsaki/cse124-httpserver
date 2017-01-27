@@ -6,6 +6,8 @@ import random
 import signal
 import socket
 import subprocess
+from telnetlib import Telnet
+import time
 import unittest
 from wsgiref.handlers import format_date_time
 
@@ -62,7 +64,7 @@ class HttpServerTest(unittest.TestCase):
         self.assertDictEqual(headers, dict(resp.headers))
 
     def assert_request(self, path, status, headers, body):
-        resp = requests.get(self.base_url + "/" + path)
+        resp = requests.get(self.base_url + "/" + path, timeout=1)
         self.assert_response(resp, status, headers, body)
 
     def assert_good_file(self, path, content_type):
@@ -126,26 +128,25 @@ class HttpServerTest(unittest.TestCase):
         # TODO
         pass
 
+    def read_response(self, sock):
+        response = HTTPResponse(sock)
+
+        response.begin()
+        content = response.read()
+        status_code = response.status
+        reason = response.reason
+        headers = dict(response.getheaders())
+        response.close()
+
+        return FakeResponse(status_code, reason, headers, content)
+
     def make_raw_request(self, request):
         try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((self.host, self.port))
-            sock.send(request.encode("UTF-8"))
-
-            response = HTTPResponse(sock)
-            response.begin()
-
-            content = response.read()
-            status_code = response.status
-            reason = response.reason
-            headers = dict(response.getheaders())
-            resp = FakeResponse(status_code, reason, headers, content)
-
-            response.close()
-
-            return resp
+            conn = Telnet(self.host, self.port)
+            conn.write(request.encode("UTF-8"))
+            return self.read_response(conn.get_socket())
         finally:
-            sock.close()
+            conn.close()
 
     def test_no_host_header(self):
         resp = self.make_raw_request("GET /cat.png HTTP/1.1\r\n\r\n")
@@ -166,6 +167,15 @@ class HttpServerTest(unittest.TestCase):
     def test_malformed_header(self):
         resp = self.make_raw_request("GET /cat.png\r\nOtherHeaderfoo\r\n\r\n")
         self.assert_response(resp, STATUS_BAD_REQUEST, self.default_headers, b"")
+
+    def test_concurrent_request(self):
+        blocker = Telnet(self.host, self.port)
+        try:
+            self.assert_good_file("good_cat", "text/plain")
+        except requests.exceptions.ReadTimeout:
+            self.fail("Unable to make a concurrent request")
+        finally:
+            blocker.close()
 
 
 if __name__ == "__main__":
