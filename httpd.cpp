@@ -9,6 +9,7 @@
 
 using std::cerr;
 using std::cout;
+using std::invalid_argument;
 using std::make_shared;
 using std::string;
 using std::shared_ptr;
@@ -35,12 +36,21 @@ public:
     }
 };
 
-void start_httpd(unsigned short port, string doc_root) {
+void start_httpd(unsigned short port, string doc_root, ThreadModel thread_model) {
     cerr << "Starting server (port: " << port << ", doc_root: " << doc_root << ")" << endl;
 
     shared_ptr<FileRepository> repository = make_shared<DirectoryFileRepository>(doc_root);
     shared_ptr<HttpRequestHandler> request_handler = make_shared<FileServingHttpHandler>(repository);
-    shared_ptr<HttpConnectionHandler> connection_handler = make_shared<BlockingHttpConnectionHandler>(request_handler);
+
+    shared_ptr<HttpConnectionHandler> connection_handler;
+    if (thread_model == NO_THREADS) {
+        connection_handler = make_shared<BlockingHttpConnectionHandler>(request_handler);
+    } else if (thread_model == NO_POOL) {
+        connection_handler = make_shared<ThreadSpawningHttpConnectionHandler>(request_handler);
+    } else {
+        throw invalid_argument("pooled threading not supported");
+    }
+
     HttpServer server(HttpListener(make_shared<SocketListener>(port)), connection_handler);
     server.serve();
 }
