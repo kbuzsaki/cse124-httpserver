@@ -1,13 +1,13 @@
+#include <thread>
 #include <stdexcept>
 #include "connection_handlers.h"
 
-using std::shared_ptr;
 using std::exception;
+using std::thread;
+using std::shared_ptr;
 
 
-BlockingHttpConnectionHandler::BlockingHttpConnectionHandler(shared_ptr<HttpRequestHandler> handler) : handler(handler) {}
-
-void BlockingHttpConnectionHandler::handle_connection(HttpConnection&& conn) {
+void handle_connection(shared_ptr<HttpRequestHandler> handler, HttpConnection&& conn) {
     try {
         HttpRequest request = conn.read_request();
         if (!has_header(request.headers, "Host")) {
@@ -21,4 +21,19 @@ void BlockingHttpConnectionHandler::handle_connection(HttpConnection&& conn) {
     } catch (exception&) {
         conn.write_response(internal_server_error_response());
     }
+}
+
+
+BlockingHttpConnectionHandler::BlockingHttpConnectionHandler(shared_ptr<HttpRequestHandler> handler) : handler(handler) {}
+
+void BlockingHttpConnectionHandler::handle_connection(HttpConnection&& conn) {
+    ::handle_connection(handler, std::move(conn));
+}
+
+
+ThreadSpawningHttpConnectionHandler::ThreadSpawningHttpConnectionHandler(shared_ptr<HttpRequestHandler> handler) : handler(handler) {}
+
+void ThreadSpawningHttpConnectionHandler::handle_connection(HttpConnection&& conn) {
+    thread th(::handle_connection, handler, std::move(conn));
+    th.detach();
 }
