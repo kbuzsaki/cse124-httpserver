@@ -61,7 +61,8 @@ void SocketConnection::write(std::string s) {
 
 void SocketConnection::close() {
     if (!this->is_closed()) {
-        if (::shutdown(this->client_sock, SHUT_RDWR) < 0) {
+        // ignore ENOTCONN in case the client closes before us
+        if (::shutdown(this->client_sock, SHUT_RDWR) < 0  && errno != ENOTCONN) {
             cerr << errno_message("shutdown() failed: ") << endl;
         }
         if (::close(this->client_sock) < 0) {
