@@ -154,9 +154,8 @@ void test_ends_with(TestRunner& runner) {
 
 void test_mock_connection(TestRunner& runner) {
     MockConnection empty_mock("");
-    runner.assert_equal(string(""), empty_mock.read(), "empty mock fails to read empty string");
-    runner.assert_equal(string(""), empty_mock.read(), "empty mock fails to read empty string with repeated calls to read");
-    runner.assert_equal(string(""), empty_mock.read(), "empty mock fails to read empty string with repeated calls to read");
+    runner.assert_throws<ConnectionClosed>([&](){ empty_mock.read(); }, "read on empty mock");
+    runner.assert_throws<ConnectionClosed>([&](){ empty_mock.read(); }, "second read on empty mock");
 
     runner.assert_equal(string(""), empty_mock.written(), "empty mock has non-empty written buffer");
     empty_mock.write("foo");
@@ -171,7 +170,8 @@ void test_mock_connection(TestRunner& runner) {
     runner.assert_equal(string(" bi"), full_mock.read(), "failed second 3 byte read");
     runner.assert_equal(string("g c"), full_mock.read(), "failed third 3 byte read");
     runner.assert_equal(string("at"), full_mock.read(), "failed final 3 (2) byte read");
-    runner.assert_equal(string(""), full_mock.read(), "failed read of exhausted mock");
+    runner.assert_throws<ConnectionClosed>([&](){ full_mock.read(); }, "read of exhausted mock");
+    runner.assert_throws<ConnectionClosed>([&](){ full_mock.read(); }, "second read of exhausted mock");
 }
 
 void test_mock_listener(TestRunner& runner) {
@@ -259,16 +259,14 @@ void test_mock_file_repository(TestRunner& runner) {
 void test_buffered_connection(TestRunner& runner) {
     shared_ptr<MockConnection> empty_mock = make_shared<MockConnection>("");
     BufferedConnection empty_buffered(empty_mock);
-    runner.assert_equal(string(""), empty_buffered.read_until("\r\n"), "empty mock fails to read empty string");
-    runner.assert_equal(string(""), empty_buffered.read_until("\r\n"), "empty mock fails to read empty string");
-    runner.assert_equal(string(""), empty_buffered.read_until("\r\n"), "empty mock fails to read empty string");
+    runner.assert_throws<ConnectionClosed>([&](){ empty_buffered.read_until("\r\n"); }, "read of empty buffered conn");
     runner.assert_equal(string(""), empty_mock->written(), "buffered conn wrote to inner conn on read");
 
     empty_buffered.write("foo");
     runner.assert_equal(string("foo"), empty_mock->written(), "buffered conn failed first write to inner con");
     empty_buffered.write("bar");
     runner.assert_equal(string("foobar"), empty_mock->written(), "buffered conn failed second write to inner con");
-    runner.assert_equal(string(""), empty_buffered.read_until("\r\n"), "empty mock fails to read empty string after writes");
+    runner.assert_throws<ConnectionClosed>([&](){ empty_buffered.read_until("\r\n"); }, "read of empty buffered conn after writes");
 
     // test buffered reads with a variety of read buffer sizes
     int read_sizes[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100};
@@ -278,9 +276,9 @@ void test_buffered_connection(TestRunner& runner) {
         BufferedConnection full_buffered(full_mock);
         runner.assert_equal(string("the"), full_buffered.read_until(" "), itos(read_size) + ") full mock failed first read");
         runner.assert_equal(string("big"), full_buffered.read_until(" "), itos(read_size) + ") full mock failed second read");
-        runner.assert_equal(string("cat"), full_buffered.read_until(" "), itos(read_size) + ") full mock failed third read");
-        runner.assert_equal(string(""), full_buffered.read_until(" "), itos(read_size) + ") full mock failed fourth (empty) read");
-        runner.assert_equal(string(""), full_buffered.read_until(" "), itos(read_size) + ") full mock failed fifth (empty) read");
+        runner.assert_throws<ConnectionClosed>([&](){ full_buffered.read_until(" "); }, itos(read_size) + ") full mock failed third (buffered without delim) read");
+        runner.assert_throws<ConnectionClosed>([&](){ full_buffered.read_until(" "); }, itos(read_size) + ") full mock failed fourth (empty) read");
+        runner.assert_throws<ConnectionClosed>([&](){ full_buffered.read_until(" "); }, itos(read_size) + ") full mock failed fifth (empty) read");
     }
 
     // test multicharacter separator buffered reads with a variety of read buffer sizes
@@ -292,9 +290,9 @@ void test_buffered_connection(TestRunner& runner) {
         runner.assert_equal(string("full cat stuff"), full_buffered.read_until("ab"), itos(read_size) + ") full mock failed second multichar read");
         runner.assert_equal(string("melody"), full_buffered.read_until("ab"), itos(read_size) + ") full mock failed third multichar read");
         runner.assert_equal(string(""), full_buffered.read_until("ab"), itos(read_size) + ") full mock failed fourth (empty sep) read");
-        runner.assert_equal(string("butter"), full_buffered.read_until("ab"), itos(read_size) + ") full mock failed fifth read");
-        runner.assert_equal(string(""), full_buffered.read_until("ab"), itos(read_size) + ") full mock failed sixth (empty conn) read");
-        runner.assert_equal(string(""), full_buffered.read_until("ab"), itos(read_size) + ") full mock failed seventh (empty conn) read");
+        runner.assert_throws<ConnectionClosed>([&](){ full_buffered.read_until("ab"); }, itos(read_size) + ") full mock failed fifth (buffered without delim) read");
+        runner.assert_throws<ConnectionClosed>([&](){ full_buffered.read_until("ab"); }, itos(read_size) + ") full mock failed sixth (empty conn) read");
+        runner.assert_throws<ConnectionClosed>([&](){ full_buffered.read_until("ab"); }, itos(read_size) + ") full mock failed seventh (empty conn) read");
     }
 }
 
@@ -321,12 +319,7 @@ void test_http_connection(TestRunner& runner) {
 
     shared_ptr<MockConnection> empty_mock_conn = make_shared<MockConnection>("");
     HttpConnection empty_request_conn(empty_mock_conn);
-    try {
-        empty_request_conn.read_request();
-        runner.fail("failed to raise exception with empty connection");
-    } catch (HttpRequestParseError&) {
-        runner.pass();
-    }
+    runner.assert_throws<ConnectionClosed>([&](){ empty_request_conn.read_request(); }, "reading request from empty connection");
 
     shared_ptr<MockConnection> bad_initial_line_mock_conn = make_shared<MockConnection>("foo bar\r\n\r\n");
     HttpConnection bad_initial_line_request_conn(bad_initial_line_mock_conn);
@@ -400,7 +393,7 @@ void test_http_server(TestRunner& runner) {
             make_shared<MockConnection>(request_1.pack().serialize()),
             make_shared<MockConnection>(request_2.pack().serialize()),
             make_shared<MockConnection>(request_3.pack().serialize()),
-            make_shared<MockConnection>("foo bar")
+            make_shared<MockConnection>("foo bar\r\n\r\n")
     };
     shared_ptr<MockListener> mock_listener = make_shared<MockListener>(mock_connections);
 

@@ -23,8 +23,12 @@ std::string MockConnection::read() {
     char buf[BUFFER_SIZE];
 
     read_payload.read(buf, read_size);
-    buf[read_payload.gcount()] = '\0';
+    ssize_t received = read_payload.gcount();
+    if (received == 0) {
+        throw ConnectionClosed();
+    }
 
+    buf[received] = '\0';
     return string(buf);
 }
 

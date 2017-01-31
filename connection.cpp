@@ -19,6 +19,8 @@ using std::stringstream;
 
 ConnectionError::ConnectionError(string message) : runtime_error(message) {}
 
+ConnectionClosed::ConnectionClosed() : runtime_error("connection closed") {}
+
 
 SocketConnection::SocketConnection() : client_sock(INVALID_SOCK) {}
 
@@ -38,6 +40,8 @@ string SocketConnection::read() {
     ssize_t received = ::recv(client_sock, buf, sizeof(buf), 0);
     if (received < 0) {
         throw ConnectionError(errno_message("recv() failed: "));
+    } else if (received == 0) {
+        throw ConnectionClosed();
     }
 
     buf[received] = '\0';

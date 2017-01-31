@@ -18,6 +18,8 @@ void handle_connection(shared_ptr<HttpRequestHandler> handler, HttpConnection&& 
         }
     } catch (HttpRequestParseError&) {
         conn.write_response(bad_request_response());
+    } catch (ConnectionClosed&) {
+        return;
     } catch (exception&) {
         conn.write_response(internal_server_error_response());
     }

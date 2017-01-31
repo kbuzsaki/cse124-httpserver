@@ -24,6 +24,12 @@ public:
 };
 
 
+class ConnectionClosed : public std::runtime_error {
+public:
+    ConnectionClosed();
+};
+
+
 class SocketConnection : public Connection {
     int client_sock;
 
