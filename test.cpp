@@ -300,7 +300,17 @@ void test_http_connection(TestRunner& runner) {
     runner.assert_equal(string(HTTP_VERSION_0_9), request.version, "incorrect request http version");
     runner.assert_equal(vector<HttpHeader>{{"Host", "example.com"}, {"MyHeader", "my_value"}}, request.headers, "incorrect request headers");
     runner.assert_equal(string(""), request.body, "incorrect request body");
+    runner.assert_throws<ConnectionClosed>([&](){ request_conn.read_request(); }, "read from exhausted request");
     runner.assert_equal(string(""), mock_conn->written(), "http conn wrote to socket before write was called");
+
+    string pipelined_request_str = "GET /foo.html HTTP/1.1\r\nHost: fuz\r\n\r\nGET /bar.html HTTP/0.9\r\nHost: baz\r\n\r\n";
+    shared_ptr<MockConnection> pipelined_mock_conn = make_shared<MockConnection>(pipelined_request_str);
+    HttpConnection pipelined_request_conn(pipelined_mock_conn);
+    HttpRequest first_request = pipelined_request_conn.read_request();
+    runner.assert_equal(HttpRequest{"GET", "/foo.html", HTTP_VERSION_1_1, vector<HttpHeader>{{"Host", "fuz"}}, ""}, first_request, "first pipelined request");
+    HttpRequest second_request = pipelined_request_conn.read_request();
+    runner.assert_equal(HttpRequest{"GET", "/bar.html", HTTP_VERSION_0_9, vector<HttpHeader>{{"Host", "baz"}}, ""}, second_request, "second pipelined request");
+    runner.assert_throws<ConnectionClosed>([&](){ pipelined_request_conn.read_request(); }, "third (empty) read from empty pipeline");
 
     // TODO: test body with \r\n sequence
     HttpResponse response;
