@@ -14,29 +14,21 @@ using std::vector;
 #define NUM_HEADER_PARTS (2)
 
 #define CRLF ("\r\n")
+#define CRLFCRLF ("\r\n\r\n")
 
 vector<HttpHeader> parse_headers(const vector<string>&);
 
 
 std::string HttpFrame::serialize() {
-    stringstream buf;
-
-    buf << this->initial_line << CRLF;
-    for (size_t i = 0; i < this->header_lines.size(); i++) {
-        buf << this->header_lines[i] << CRLF;
-    }
-    buf << CRLF;
-    buf << this->body;
-
-    return buf.str();
+    return contents;
 }
 
 std::ostream& operator<<(std::ostream& os, const HttpFrame& frame) {
-    return os << "{'" << frame.initial_line << "', " << frame.header_lines << ", '" << frame.body << "'}";
+    return os << "{'" << frame.contents << "'}";
 }
 
 bool operator==(const HttpFrame& lhs, const HttpFrame& rhs) {
-    return lhs.initial_line == rhs.initial_line && lhs.header_lines == rhs.header_lines && lhs.body == rhs.body;
+    return lhs.contents == rhs.contents;
 }
 
 bool operator!=(const HttpFrame& lhs, const HttpFrame& rhs) {
@@ -69,21 +61,19 @@ bool has_header(const std::vector<HttpHeader>& headers, std::string key) {
 
 
 HttpFrame HttpRequest::pack() {
-    HttpFrame frame;
-
     stringstream buf;
-    buf << this->method << " " << this->uri << " " << this->version;
-    frame.initial_line = buf.str();
+
+    buf << this->method << " " << this->uri << " " << this->version << CRLF;
 
     for (size_t i = 0; i < this->headers.size(); i++) {
-        buf.str("");
-        buf << this->headers[i].key << ": " << this->headers[i].value;
-        frame.header_lines.push_back(buf.str());
+        buf << this->headers[i].key << ": " << this->headers[i].value << CRLF;
     }
 
-    frame.body = this->body;
+    buf << CRLF;
 
-    return frame;
+    buf << this->body;
+
+    return HttpFrame{buf.str()};
 }
 
 std::ostream& operator<<(std::ostream& os, const HttpRequest& request) {
@@ -115,21 +105,19 @@ bool operator!=(const HttpStatus& lhs, const HttpStatus& rhs) {
 
 
 HttpFrame HttpResponse::pack() {
-    HttpFrame frame;
-
     stringstream buf;
-    buf << this->version << " " << this->status.code << " " << this->status.name;
-    frame.initial_line = buf.str();
+
+    buf << this->version << " " << this->status.code << " " << this->status.name << CRLF;
 
     for (size_t i = 0; i < this->headers.size(); i++) {
-        buf.str("");
-        buf << this->headers[i].key << ": " << this->headers[i].value;
-        frame.header_lines.push_back(buf.str());
+        buf << this->headers[i].key << ": " << this->headers[i].value << CRLF;
     }
 
-    frame.body = this->body;
+    buf << CRLF;
 
-    return frame;
+    buf << this->body;
+
+    return HttpFrame{buf.str()};
 }
 
 std::ostream& operator<<(std::ostream& os, const HttpResponse& response) {
@@ -199,18 +187,7 @@ HttpConnection::HttpConnection(HttpConnection&& http_conn) : conn(std::move(http
 HttpFrame HttpConnection::read_frame() {
     HttpFrame frame;
 
-    frame.initial_line = this->conn.read_until(CRLF);
-
-    while (true) {
-        string header_line = this->conn.read_until(CRLF);
-        if (header_line != "") {
-            frame.header_lines.push_back(header_line);
-        } else {
-            break;
-        }
-    }
-
-    frame.body = "";
+    frame.contents = conn.read_until(CRLFCRLF);
 
     return frame;
 }
@@ -221,21 +198,33 @@ void HttpConnection::write_frame(HttpFrame frame) {
 
 HttpRequest HttpConnection::read_request() {
     HttpFrame frame = this->read_frame();
+    vector<string> frame_lines = split(frame.contents, CRLF);
+
+    if (frame_lines.size() == 0) {
+        throw HttpRequestParseError("malformed request missing initial line");
+    }
+
+    // first line is the request line / initial line
+    string initial_line = frame_lines[0];
+    // remaining lines are the headers
+    frame_lines.erase(frame_lines.begin());
+
+    vector<string>& header_lines = frame_lines;
 
     HttpRequest request;
 
-    vector<string> parts = split_n(frame.initial_line, " ", NUM_REQUEST_PARTS - 1);
+    vector<string> parts = split_n(initial_line, " ", NUM_REQUEST_PARTS - 1);
     if (parts.size() != NUM_REQUEST_PARTS) {
         stringstream error;
-        error << "malformed http request line '" << frame.initial_line << "' had " << parts.size() << " parts, expected " << NUM_REQUEST_PARTS;
+        error << "malformed http request line '" << initial_line << "' had " << parts.size() << " parts, expected " << NUM_REQUEST_PARTS;
         throw HttpRequestParseError(error.str());
     }
     request.method = parts[0];
     request.uri = parts[1];
     request.version = parts[2];
 
-    request.headers = parse_headers(frame.header_lines);
-    request.body = frame.body;
+    request.headers = parse_headers(header_lines);
+    request.body = "";
 
     return request;
 }

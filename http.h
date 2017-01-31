@@ -12,9 +12,7 @@ const std::string HTTP_VERSION_1_1 = "HTTP/1.1";
 
 
 struct HttpFrame {
-    std::string initial_line;
-    std::vector<std::string> header_lines;
-    std::string body;
+    std::string contents;
 
 public:
     std::string serialize();
