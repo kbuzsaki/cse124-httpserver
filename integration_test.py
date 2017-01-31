@@ -14,6 +14,8 @@ from wsgiref.handlers import format_date_time
 import requests
 import requests.models
 
+SLEEP_TIMEOUT = 0.5
+
 WORLD_READABLE_FLAG = 0x4
 
 FakeResponse = namedtuple("FakeResponse", ["status_code", "reason", "headers", "content"])
@@ -41,6 +43,9 @@ class HttpServerTest(unittest.TestCase):
         }
 
         self.daemon = subprocess.Popen(["./httpd", str(self.port), self.base_path])
+        time.sleep(SLEEP_TIMEOUT)
+        if self.daemon.poll():
+            raise Exception("failed to init server!")
 
     @classmethod
     def tearDownClass(self):
