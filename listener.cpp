@@ -27,9 +27,7 @@ SocketListener::SocketListener(uint16_t port) {
 
     int err = bind(this->sock, (struct sockaddr*) &target, sizeof(target));
     if (err < 0) {
-        stringstream error;
-        error << "bind() failed: " << strerror(errno);
-        throw ListenerError(error.str());
+        throw ListenerError(errno_message("bind() failed: "));
     }
 }
 
@@ -48,9 +46,7 @@ SocketListener::~SocketListener() {
 void SocketListener::listen() {
     int err = ::listen(sock, QUEUE_SIZE);
     if (err < 0) {
-        stringstream error;
-        error << "listen() failed: " << strerror(errno);
-        throw ListenerError(error.str());
+        throw ListenerError(errno_message("listen() failed: "));
     }
 }
 
@@ -60,9 +56,7 @@ shared_ptr<Connection> SocketListener::accept() {
 
     int client_sock = ::accept(sock, (struct sockaddr*) &client_addr, &client_len);
     if (client_sock < 0) {
-        stringstream error;
-        error << "accept() failed: " << strerror(errno);
-        throw ListenerError(error.str());
+        throw ListenerError(errno_message("accept() failed: "));
     }
 
     return make_shared<SocketConnection>(client_sock);

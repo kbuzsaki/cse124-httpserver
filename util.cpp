@@ -164,3 +164,10 @@ std::ostream &operator<<(std::ostream &os, const system_clock::time_point &tp) {
     return os << to_http_date(tp);
 }
 
+
+string errno_message(string prefix) {
+    stringstream error;
+    error << prefix << strerror(errno);
+    return error.str();
+}
+

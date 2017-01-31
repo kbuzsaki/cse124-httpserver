@@ -48,4 +48,7 @@ std::string to_http_date(const std::chrono::system_clock::time_point& tp);
 
 std::ostream& operator<<(std::ostream& os, const std::chrono::system_clock::time_point& tp);
 
+
+std::string errno_message(std::string prefix);
+
 #endif //UTIL_H
