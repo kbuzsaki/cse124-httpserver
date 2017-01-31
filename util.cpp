@@ -166,8 +166,14 @@ std::ostream &operator<<(std::ostream &os, const system_clock::time_point &tp) {
 
 
 string errno_message(string prefix) {
+    char buf[1024];
+    bzero(buf, sizeof(buf));
+    if (strerror_r(errno, buf, sizeof(buf)) != 0) {
+        buf[0] = '\0';
+    }
+
     stringstream error;
-    error << prefix << strerror(errno);
+    error << prefix << buf;
     return error.str();
 }
 
