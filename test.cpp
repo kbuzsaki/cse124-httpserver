@@ -428,23 +428,38 @@ void test_file_serving_handler(TestRunner& runner) {
     runner.assert_equal(ok_response("baz/car/tar contents here", "text/plain", system_clock::time_point()), nested_response, "wrong response for nested file");
 }
 
+
+typedef void (*TestFunc)(TestRunner&);
+
 int main() {
     TestRunner runner;
 
-    test_split(runner);
-    test_canonicalize_path(runner);
-    test_to_http_date(runner);
-    test_ends_with(runner);
-    test_mock_connection(runner);
-    test_mock_listener(runner);
-    test_mock_handler(runner);
-    test_mock_file(runner);
-    test_mock_file_repository(runner);
-    test_buffered_connection(runner);
-    test_http_connection(runner);
-    test_http_listener(runner);
-    test_http_server(runner);
-    test_file_serving_handler(runner);
+    vector<TestFunc> test_funcs = {
+        test_split,
+        test_canonicalize_path,
+        test_to_http_date,
+        test_ends_with,
+        test_mock_connection,
+        test_mock_listener,
+        test_mock_handler,
+        test_mock_file,
+        test_mock_file_repository,
+        test_buffered_connection,
+        test_http_connection,
+        test_http_listener,
+        test_http_server,
+        test_file_serving_handler
+    };
+
+    for (size_t i = 0; i < test_funcs.size(); i++) {
+        try {
+            test_funcs[i](runner);
+        } catch (std::exception& e) {
+            cerr << "test_funcs[" << i << "] threw exception: " << e.what() << endl;
+        } catch (...) {
+            cerr << "test_funcs[" << i << "] threw an unknown exception!" << endl;
+        }
+    }
 
     runner.print_results(cout);
     return 0;
