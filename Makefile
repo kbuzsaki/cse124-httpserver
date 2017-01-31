@@ -2,7 +2,7 @@ CXX = g++
 CCC = g++
 CFLAGS = -std=c++0x -ggdb -Wall -Wextra -pedantic -Werror
 CXXFLAGS = $(CFLAGS)
-DEPS = httpd.h connection.h util.h http.h server.h mocks.h listener.h request_handlers.h file_repository.h connection_handlers.h
+DEPS = httpd.h connection.h util.h http.h server.h mocks.h listener.h request_handlers.h file_repository.h connection_handlers.h synchronized_queue.h
 SRCS = httpd.cpp connection.cpp util.cpp http.cpp server.cpp mocks.cpp listener.cpp request_handlers.cpp file_repository.cpp connection_handlers.cpp
 OBJ_DIR = build
 MAIN_SRCS = main.cpp $(SRCS)
