@@ -1,4 +1,5 @@
 #include <chrono>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -39,6 +40,18 @@ public:
             this->fail(error.str());
         } else {
             this->pass();
+        }
+    }
+
+    template<typename E>
+    void assert_throws(function<void ()> f, string message) {
+        try {
+            f();
+            this->fail("failed to throw: " + message);
+        } catch (E&) {
+            this->pass();
+        } catch (...) {
+            this->fail("threw unexpected exception: " + message);
         }
     }
 
