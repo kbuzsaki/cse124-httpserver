@@ -410,6 +410,27 @@ void test_http_server(TestRunner& runner) {
     runner.assert_equal(bad_request_response().pack().serialize(), mock_connections[4]->written(), "mock malformed request conn received wrong response");
 }
 
+void test_pipelined_http_server(TestRunner& runner) {
+    HttpRequest request_1{"GET", "/foo", HTTP_VERSION_1_0, vector<HttpHeader>{{"Host", "foo"}, {"MyHeader", "myval"}}, ""};
+    HttpRequest request_2{"GET", "/bar", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}, {"Host", "bar"}}, ""};
+    vector<shared_ptr<MockConnection>> mock_connections = {
+            make_shared<MockConnection>(request_1.pack().serialize() + request_2.pack().serialize())
+    };
+    shared_ptr<MockListener> mock_listener = make_shared<MockListener>(mock_connections);
+
+    HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"OtherKey", "othervalue"}}, ""};
+    shared_ptr<MockHttpRequestHandler> mock_request_handler = make_shared<MockHttpRequestHandler>(response);
+    shared_ptr<HttpConnectionHandler> connection_handler = make_shared<BlockingHttpConnectionHandler>(mock_request_handler);
+
+    HttpServer server(HttpListener(mock_listener), connection_handler);
+
+    server.serve();
+
+    // TODO: maybe make two different responses to verify sent in the correct order
+    runner.assert_equal(vector<HttpRequest>{request_1, request_2}, mock_request_handler->requests(), "pipelined handler received requests incorrectly");
+    runner.assert_equal(response.pack().serialize() + response.pack().serialize(), mock_connections[0]->written(), "pipelined conn received responses incorrectly");
+}
+
 void test_file_serving_handler(TestRunner& runner) {
     system_clock::time_point foo_file_time = make_time_point(2004, 1, 31, 2, 2, 2);
     unordered_map<string, shared_ptr<File>> repository_map = {
@@ -458,6 +479,7 @@ int main() {
         test_http_connection,
         test_http_listener,
         test_http_server,
+        test_pipelined_http_server,
         test_file_serving_handler
     };
 

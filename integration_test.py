@@ -173,6 +173,21 @@ class HttpServerTest(unittest.TestCase):
         resp = self.make_raw_request("GET /cat.png\r\nOtherHeaderfoo\r\n\r\n")
         self.assert_response(resp, STATUS_BAD_REQUEST, self.default_headers, b"")
 
+    def test_pipelined_request(self):
+        two_requests = "GET /foo.html HTTP/1.1\r\nHost: bar\r\n\r\nGET /good_cat HTTP/1.1\r\nHost: baz\r\n\r\n"
+        expected = (b"HTTP/1.1 200 OK\r\nServer: TritonHTTP/0.1\r\nContent-Length: 37\r\n"
+                 + b"Content-Type: text/html\r\nLast-Modified: Sat, 21 Jan 2017 23:59:32 GMT\r\n\r\n"
+                 + b"<h1> hi</h1>\n<p>\nthis is things\n</p>\n"
+                 + b"HTTP/1.1 200 OK\r\nServer: TritonHTTP/0.1\r\nContent-Length: 5\r\n"
+                 + b"Content-Type: text/plain\r\nLast-Modified: Sat, 21 Jan 2017 23:56:17 GMT\r\n\r\nmeow\n")
+        try:
+            conn = Telnet(self.host, self.port)
+            conn.write(two_requests.encode("UTF-8"))
+            responses = conn.read_until(b"kldjsflskdfjsdlkfj", timeout=SLEEP_TIMEOUT)
+            self.assertEqual(expected, responses)
+        finally:
+            conn.close()
+
     def test_concurrent_request(self):
         blocker = Telnet(self.host, self.port)
         try:
