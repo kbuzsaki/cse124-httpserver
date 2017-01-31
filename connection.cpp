@@ -17,6 +17,8 @@ using std::stringstream;
 
 // TODO: add proper error handling via exceptions when connection stuff fails
 
+ConnectionError::ConnectionError(string message) : runtime_error(message) {}
+
 
 SocketConnection::SocketConnection() : client_sock(INVALID_SOCK) {}
 
@@ -35,8 +37,7 @@ string SocketConnection::read() {
 
     ssize_t received = ::recv(client_sock, buf, sizeof(buf), 0);
     if (received < 0) {
-        cerr << "recv() failed: " << strerror(errno) << endl;
-        return "";
+        throw ConnectionError(errno_message("recv() failed: "));
     }
 
     buf[received] = '\0';
@@ -45,17 +46,22 @@ string SocketConnection::read() {
 
 void SocketConnection::write(std::string s) {
     if (!this->is_closed()) {
-        ::send(this->client_sock, s.c_str(), s.size(), 0);
+        ssize_t sent = ::send(this->client_sock, s.c_str(), s.size(), 0);
+        if (sent < 0) {
+            throw ConnectionError(errno_message("send() failed: "));
+        } else if ((size_t) sent != s.size()) {
+            cerr << "WARNING: send() sent fewer bytes than expected!" << endl;
+        }
     }
 }
 
 void SocketConnection::close() {
     if (!this->is_closed()) {
         if (::shutdown(this->client_sock, SHUT_RDWR) < 0) {
-            cerr << "shutdown() failed: " << strerror(errno) << endl;
+            cerr << errno_message("shutdown() failed: ") << endl;
         }
         if (::close(this->client_sock) < 0) {
-            cerr << "close() failed: " << strerror(errno) << endl;
+            cerr << errno_message("close() failed: ") << endl;
         }
         this->client_sock = INVALID_SOCK;
     }

@@ -18,6 +18,12 @@ public:
 };
 
 
+class ConnectionError : public std::runtime_error {
+public:
+    ConnectionError(std::string);
+};
+
+
 class SocketConnection : public Connection {
     int client_sock;
 
