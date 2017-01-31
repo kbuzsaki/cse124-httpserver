@@ -48,7 +48,7 @@ void start_httpd(unsigned short port, string doc_root, ThreadModel thread_model)
     } else if (thread_model == NO_POOL) {
         connection_handler = make_shared<ThreadSpawningHttpConnectionHandler>(request_handler);
     } else {
-        throw invalid_argument("pooled threading not supported");
+        connection_handler = make_shared<ThreadPoolHttpConnectionHandler>(request_handler, (int)thread_model);
     }
 
     HttpServer server(HttpListener(make_shared<SocketListener>(port)), connection_handler);
