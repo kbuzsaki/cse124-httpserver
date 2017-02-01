@@ -32,6 +32,22 @@ public:
         messages.push_back(message);
     }
 
+    void assert_true(bool val, string message) {
+        if (val) {
+            this->pass();
+        } else {
+            this->fail("assert_true() failed: " + message);
+        }
+    }
+
+    void assert_false(bool val, string message) {
+        if (!val) {
+            this->pass();
+        } else {
+            this->fail("assert_true() failed: " + message);
+        }
+    }
+
     template<typename T>
     void assert_equal(T expected, T actual, string message) {
         if (expected != actual) {
