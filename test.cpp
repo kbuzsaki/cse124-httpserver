@@ -3,8 +3,10 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+
 #include "connection.h"
 #include "connection_handlers.h"
+#include "htaccess.h"
 #include "http.h"
 #include "request_handlers.h"
 #include "listener.h"
@@ -475,6 +477,45 @@ void test_file_serving_handler(TestRunner& runner) {
     runner.assert_equal(ok_response("baz/car/tar contents here", "text/plain", system_clock::time_point()), nested_response, "wrong response for nested file");
 }
 
+void test_cidr_block(TestRunner& runner) {
+    CidrBlock root_block = parse_cidr("0.0.0.0/0");
+    runner.assert_true(root_block.matches(parse_ip("0.0.0.0")), "root block matches 0.0.0.0");
+    runner.assert_true(root_block.matches(parse_ip("1.2.3.4")), "root block matches 1.2.3.4");
+    runner.assert_true(root_block.matches(parse_ip("255.255.255.255")), "root block matches 255.255.255");
+
+    CidrBlock local_block = parse_cidr("192.0.0.0/8");
+    runner.assert_true(local_block.matches(parse_ip("192.0.0.0")), "192.0.0.0/8 matches 192.0.0.0");
+    runner.assert_true(local_block.matches(parse_ip("192.1.2.3")), "192.0.0.0/8 matches 192.1.2.3");
+    runner.assert_true(local_block.matches(parse_ip("192.255.255.255")), "192.0.0.0/8 matches 192.255.255.255");
+    runner.assert_false(local_block.matches(parse_ip("255.255.255.255")), "192.0.0.0/8 doesn't match 255.255.255.255");
+    runner.assert_false(local_block.matches(parse_ip("0.0.0.0")), "192.0.0.0/8 doesn't match 0.0.0.0");
+    runner.assert_false(local_block.matches(parse_ip("0.0.0.192")), "192.0.0.0/8 doesn't match 0.0.0.192");
+
+    CidrBlock a_block = parse_cidr("0.0.0.0/1");
+    runner.assert_true(a_block.matches(parse_ip("0.0.0.0")), "0.0.0.0/1 matches 0.0.0.0");
+    runner.assert_true(a_block.matches(parse_ip("0.0.0.1")), "0.0.0.0/1 doesn't match 0.0.0.1");
+    runner.assert_true(a_block.matches(parse_ip("64.0.0.0")), "0.0.0.0/1 doesn't match 64.0.0.0");
+    runner.assert_true(a_block.matches(parse_ip("1.0.0.0")), "0.0.0.0/1 doesn't match 1.0.0.0");
+    runner.assert_false(a_block.matches(parse_ip("192.0.0.0")), "0.0.0.0/1 doesn't match 192.0.0.0");
+    runner.assert_false(a_block.matches(parse_ip("255.0.0.0")), "0.0.0.0/1 doesn't match 255.0.0.0");
+
+    CidrBlock non_a_block = parse_cidr("128.0.0.0/1");
+    runner.assert_true(non_a_block.matches(parse_ip("192.0.0.0")), "128.0.0.0/1 matches 192.0.0.0");
+    runner.assert_true(non_a_block.matches(parse_ip("255.0.0.0")), "128.0.0.0/1 matches 255.0.0.0");
+    runner.assert_false(non_a_block.matches(parse_ip("0.0.0.0")), "128.0.0.0/1 doesn't match 0.0.0.0");
+    runner.assert_false(non_a_block.matches(parse_ip("1.0.0.0")), "128.0.0.0/1 doesn't match 1.0.0.0");
+    runner.assert_false(non_a_block.matches(parse_ip("0.0.0.1")), "128.0.0.0/1 doesn't match 0.0.0.1");
+    runner.assert_false(non_a_block.matches(parse_ip("64.0.0.0")), "128.0.0.0/1 doesn't match 64.0.0.0");
+
+    CidrBlock c_block = parse_cidr("192.0.0.0/3");
+    runner.assert_true(c_block.matches(parse_ip("192.0.0.0")), "192.0.0.0/3 matches 192.0.0.0");
+    runner.assert_true(c_block.matches(parse_ip("192.0.0.1")), "192.0.0.0/3 matches 192.0.0.1");
+    runner.assert_true(c_block.matches(parse_ip("193.0.0.1")), "192.0.0.0/3 matches 193.0.0.1");
+    runner.assert_false(c_block.matches(parse_ip("0.0.0.0")), "192.0.0.0/3 doesn't match 0.0.0.0");
+    runner.assert_false(c_block.matches(parse_ip("255.255.255.255")), "192.0.0.0/3 doesn't match 255.255.255.255");
+
+    runner.assert_throws<runtime_error>([](){ parse_cidr("192.0.0.0/0"); }, "instantiating cidr block with prefix larger than length");
+}
 
 typedef void (*TestFunc)(TestRunner&);
 
@@ -496,7 +537,8 @@ int main() {
         test_http_listener,
         test_http_server,
         test_pipelined_http_server,
-        test_file_serving_handler
+        test_file_serving_handler,
+        test_cidr_block
     };
 
     for (size_t i = 0; i < test_funcs.size(); i++) {
