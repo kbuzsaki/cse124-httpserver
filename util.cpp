@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include <algorithm>
 #include <ctime>
 #include <iostream>
@@ -177,3 +178,22 @@ string errno_message(string prefix) {
     return error.str();
 }
 
+
+std::string format_ip(struct in_addr address) {
+    char buf[256];
+
+    const char* ret = inet_ntop(AF_INET, &address, buf, sizeof(buf));
+    if (ret == NULL) {
+        throw runtime_error(errno_message("inet_ntop() failed: "));
+    }
+
+    return string(ret);
+}
+
+std::ostream& operator<<(std::ostream& os, const struct in_addr& addr) {
+    return os << format_ip(addr);
+}
+
+bool operator==(const in_addr& lhs, const in_addr& rhs) {
+    return lhs.s_addr == rhs.s_addr;
+}

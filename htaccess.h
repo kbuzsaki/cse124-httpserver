@@ -20,7 +20,6 @@ public:
 };
 std::ostream& operator<<(std::ostream&, const CidrBlock&);
 
-std::string format_ip(struct in_addr address);
 struct in_addr parse_ip(std::string ip_str);
 CidrBlock parse_cidr(std::string cidr_str);
 

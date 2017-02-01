@@ -3,6 +3,7 @@
 #define UTIL_H
 
 #include <chrono>
+#include <netinet/in.h>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -50,5 +51,10 @@ std::ostream& operator<<(std::ostream& os, const std::chrono::system_clock::time
 
 
 std::string errno_message(std::string prefix);
+
+
+std::ostream& operator<<(std::ostream& os, const struct in_addr& addr);
+
+bool operator==(const in_addr& lhs, const in_addr& rhs);
 
 #endif //UTIL_H

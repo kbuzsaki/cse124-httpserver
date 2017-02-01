@@ -43,22 +43,11 @@ bool CidrBlock::matches(struct in_addr address) {
 }
 
 std::ostream& operator<<(std::ostream& os, const CidrBlock& block) {
-    return os << "{" << format_ip(block.prefix) << "/" << block.length << "}";
+    return os << "{" << block.prefix << "/" << block.length << "}";
 }
 
 struct in_addr CidrBlock::mask() {
     return make_mask(this->length);
-}
-
-std::string format_ip(struct in_addr address) {
-    char buf[256];
-
-    const char* ret = inet_ntop(AF_INET, &address, buf, sizeof(buf));
-    if (ret == NULL) {
-        throw runtime_error(errno_message("inet_ntop() failed: "));
-    }
-
-    return string(ret);
 }
 
 struct in_addr parse_ip(string ip_str) {
