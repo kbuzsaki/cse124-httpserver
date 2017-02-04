@@ -268,6 +268,33 @@ void test_mock_file_repository(TestRunner& runner) {
     runner.assert_equal(nested_file, full_repository.get_file("/baz/car/tar"), "full mock repository returned the wrong file for baz/car/tar");
 }
 
+void test_mock_dns_client(TestRunner& runner) {
+    unordered_map<string, vector<struct in_addr>> empty_map;
+    MockDnsClient empty_client(empty_map);
+    runner.assert_equal(vector<struct in_addr>(), empty_client.lookup(""), "empty mock client returned a non-empty vector");
+    runner.assert_equal(vector<struct in_addr>(), empty_client.lookup(""), "empty mock client returned a non-empty vector");
+    runner.assert_equal(vector<struct in_addr>(), empty_client.lookup("foo.bar.com"), "empty mock client returned a non-empty vector");
+    runner.assert_equal(vector<struct in_addr>(), empty_client.lookup("foo.bar.com"), "empty mock client returned a non-empty vector");
+
+    vector<struct in_addr> foo_results = {parse_ip("1.2.3.4"), parse_ip("255.255.255.255")};
+    vector<struct in_addr> bar_com_results = {parse_ip("192.168.0.1")};
+    vector<struct in_addr> www_bar_com_results = {parse_ip("10.0.0.2"), parse_ip("127.0.0.1"), parse_ip("164.2.2.3")};
+    unordered_map<string, vector<struct in_addr>> full_map = {
+            {"foo", foo_results},
+            {"bar.com", bar_com_results},
+            {"www.bar.com", www_bar_com_results}
+    };
+    MockDnsClient full_client(full_map);
+
+    runner.assert_equal(vector<struct in_addr>(), full_client.lookup(""), "full mock client returned non empty vector for missing domain");
+    runner.assert_equal(vector<struct in_addr>(), full_client.lookup("bar"), "full mock client returned non empty vector for missing domain");
+    runner.assert_equal(foo_results, full_client.lookup("foo"), "mock dns client foo");
+    runner.assert_equal(vector<struct in_addr>(), full_client.lookup("bar"), "mock dns client bar");
+    runner.assert_equal(vector<struct in_addr>(), full_client.lookup("com"), "mock dns client com");
+    runner.assert_equal(bar_com_results, full_client.lookup("bar.com"), "mock dns client bar.com");
+    runner.assert_equal(www_bar_com_results, full_client.lookup("www.bar.com"), "mock dns client www.bar.com");
+}
+
 void test_buffered_connection(TestRunner& runner) {
     shared_ptr<MockConnection> empty_mock = make_shared<MockConnection>("");
     BufferedConnection empty_buffered(empty_mock);
@@ -532,6 +559,7 @@ int main() {
         test_mock_handler,
         test_mock_file,
         test_mock_file_repository,
+        test_mock_dns_client,
         test_buffered_connection,
         test_http_connection,
         test_http_listener,

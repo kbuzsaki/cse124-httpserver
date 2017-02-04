@@ -112,3 +112,14 @@ std::shared_ptr<File> MockFileRepository::get_file(std::string path) {
 
     return mock_files.at(path);
 }
+
+
+MockDnsClient::MockDnsClient(std::unordered_map<std::string, std::vector<struct in_addr>> mock_results) : mock_results(mock_results) {}
+
+std::vector<struct in_addr> MockDnsClient::lookup(std::string domain) {
+    if (mock_results.count(domain) == 0) {
+        return vector<struct in_addr>();
+    }
+
+    return mock_results.at(domain);
+}

@@ -4,6 +4,7 @@
 #include <memory>
 #include <unordered_map>
 #include "connection.h"
+#include "dns_client.h"
 #include "http.h"
 #include "file_repository.h"
 #include "listener.h"
@@ -77,6 +78,16 @@ public:
     MockFileRepository(std::unordered_map<std::string, std::shared_ptr<File>> mock_files);
 
     virtual std::shared_ptr<File> get_file(std::string path);
+};
+
+
+class MockDnsClient : public DnsClient {
+    const std::unordered_map<std::string, std::vector<struct in_addr>> mock_results;
+
+public:
+    MockDnsClient(std::unordered_map<std::string, std::vector<struct in_addr>> mock_results);
+
+    virtual std::vector<struct in_addr> lookup(std::string domain);
 };
 
 #endif //MOCKS_H
