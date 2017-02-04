@@ -15,6 +15,10 @@ HttpResponse FileServingHttpHandler::handle_request(const HttpRequest &request) 
         return not_found_response();
     }
 
+    if (path == "/") {
+        path = "/index.html";
+    }
+
     shared_ptr<File> file = repository->get_file(path);
 
     if (file == NULL) {

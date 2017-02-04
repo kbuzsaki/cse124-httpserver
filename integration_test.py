@@ -72,17 +72,21 @@ class HttpServerTest(unittest.TestCase):
         resp = requests.get(self.base_url + "/" + path, timeout=1)
         self.assert_response(resp, status, headers, body)
 
-    def assert_good_file(self, path, content_type):
-        self.assertTrue(self.get_world_readable(path))
-        body = self.get_contents(path)
+    def assert_good_resp(self, path, body, content_type, last_modified):
         headers = {
             'Server': 'TritonHTTP/0.1',
             'Content-Length': str(len(body)),
             'Content-Type': content_type,
-            'Last-Modified': self.get_last_modified(path),
+            'Last-Modified': last_modified
         }
-
         self.assert_request(path, STATUS_OK, headers, body)
+
+    def assert_good_file(self, path, content_type):
+        self.assertTrue(self.get_world_readable(path))
+        body = self.get_contents(path)
+        last_modified = self.get_last_modified(path)
+
+        self.assert_good_resp(path, body, content_type, last_modified)
 
     def assert_bad_request(self, path):
         self.assert_request(path, STATUS_BAD_REQUEST, self.default_headers, b"")
@@ -130,8 +134,12 @@ class HttpServerTest(unittest.TestCase):
         self.assert_forbidden_file("subdir/some_forbidden")
 
     def test_index_html(self):
-        # TODO
-        pass
+        self.assertTrue(self.get_world_readable("index.html"))
+        body = self.get_contents("index.html")
+        content_type = "text/html"
+        last_modified = self.get_last_modified("index.html")
+
+        self.assert_good_resp("", body, content_type, last_modified)
 
     def read_response(self, sock):
         response = HTTPResponse(sock)
