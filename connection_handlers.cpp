@@ -27,7 +27,8 @@ void handle_connection(shared_ptr<HttpRequestHandler> handler, HttpConnection&& 
         conn.write_response(bad_request_response());
     } catch (ConnectionClosed&) {
         return;
-    } catch (exception&) {
+    } catch (exception& e) {
+        cerr << "Encountered unexpected exception: " << e.what() << endl;
         conn.write_response(internal_server_error_response());
     }
 }
