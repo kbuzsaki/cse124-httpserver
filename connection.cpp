@@ -24,7 +24,16 @@ ConnectionClosed::ConnectionClosed() : runtime_error("connection closed") {}
 
 SocketConnection::SocketConnection() : client_sock(INVALID_SOCK) {}
 
-SocketConnection::SocketConnection(int client_sock) : client_sock(client_sock) {}
+SocketConnection::SocketConnection(int client_sock) : client_sock(client_sock) {
+    struct timeval tv;
+    tv.tv_sec = 10;
+    tv.tv_usec = 0;
+
+    int err = setsockopt(this->client_sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    if (err < 0) {
+        cerr << errno_message("setsockopt() failed: ") << endl;
+    }
+}
 
 SocketConnection::SocketConnection(SocketConnection&& conn) : client_sock(conn.client_sock) {
     conn.client_sock = INVALID_SOCK;
@@ -39,7 +48,12 @@ string SocketConnection::read() {
 
     ssize_t received = ::recv(client_sock, buf, sizeof(buf), 0);
     if (received < 0) {
-        throw ConnectionError(errno_message("recv() failed: "));
+        if (errno == EAGAIN) {
+            // TODO: add test for this timeout?
+            throw ConnectionClosed();
+        } else {
+            throw ConnectionError(errno_message("recv() failed: "));
+        }
     } else if (received == 0) {
         throw ConnectionClosed();
     }
