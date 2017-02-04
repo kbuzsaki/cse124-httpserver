@@ -18,4 +18,10 @@ public:
     virtual std::vector<struct in_addr> lookup(std::string domain);
 };
 
+
+class NopDnsClient : public DnsClient {
+public:
+    virtual std::vector<struct in_addr> lookup(std::string domain);
+};
+
 #endif //DNS_CLIENT_H

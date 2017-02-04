@@ -28,3 +28,8 @@ std::vector<struct in_addr> NetworkDnsClient::lookup(string domain) {
 
     return addresses;
 }
+
+
+vector<struct in_addr> NopDnsClient::lookup(string) {
+    return vector<struct in_addr>();
+}
