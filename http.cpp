@@ -14,7 +14,6 @@ using std::vector;
 #define NUM_HEADER_PARTS (2)
 
 #define CRLF ("\r\n")
-#define CRLFCRLF ("\r\n\r\n")
 
 vector<HttpHeader> parse_headers(const vector<string>&);
 
@@ -208,27 +207,6 @@ HttpRequest parse_request_frame(const HttpFrame& frame) {
 
 
 HttpRequestParseError::HttpRequestParseError(string message) : runtime_error(message) {}
-
-
-HttpConnection::HttpConnection(shared_ptr<Connection> conn) : conn(conn) {}
-
-HttpConnection::HttpConnection(HttpConnection&& http_conn) : conn(std::move(http_conn.conn)) {}
-
-HttpFrame HttpConnection::read_frame() {
-    return HttpFrame{conn.read_until(CRLFCRLF)};
-}
-
-void HttpConnection::write_frame(HttpFrame frame) {
-    this->conn.write(frame.serialize());
-}
-
-HttpRequest HttpConnection::read_request() {
-    return parse_request_frame(this->read_frame());
-}
-
-void HttpConnection::write_response(HttpResponse response) {
-    this->write_frame(response.pack());
-}
 
 
 vector<HttpHeader> parse_headers(const vector<string>& lines) {

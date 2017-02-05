@@ -96,18 +96,4 @@ public:
 HttpRequest parse_request_frame(const HttpFrame& frame);
 
 
-class HttpConnection {
-    BufferedConnection conn;
-
-    HttpFrame read_frame();
-    void write_frame(HttpFrame frame);
-
-public:
-    HttpConnection(std::shared_ptr<Connection> conn);
-    HttpConnection(HttpConnection&&);
-
-    HttpRequest read_request();
-    void write_response(HttpResponse);
-};
-
 #endif //HTTP_H

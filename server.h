@@ -5,6 +5,22 @@
 #include "http.h"
 #include "listener.h"
 
+
+class HttpConnection {
+    BufferedConnection conn;
+
+    HttpFrame read_frame();
+    void write_frame(HttpFrame frame);
+
+public:
+    HttpConnection(std::shared_ptr<Connection> conn);
+    HttpConnection(HttpConnection&&);
+
+    HttpRequest read_request();
+    void write_response(HttpResponse);
+};
+
+
 class HttpListener {
     std::shared_ptr<Listener> listener;
 
