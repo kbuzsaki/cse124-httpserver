@@ -177,27 +177,7 @@ HttpResponse internal_server_error_response() {
 }
 
 
-HttpRequestParseError::HttpRequestParseError(string message) : runtime_error(message) {}
-
-
-HttpConnection::HttpConnection(shared_ptr<Connection> conn) : conn(conn) {}
-
-HttpConnection::HttpConnection(HttpConnection&& http_conn) : conn(std::move(http_conn.conn)) {}
-
-HttpFrame HttpConnection::read_frame() {
-    HttpFrame frame;
-
-    frame.contents = conn.read_until(CRLFCRLF);
-
-    return frame;
-}
-
-void HttpConnection::write_frame(HttpFrame frame) {
-    this->conn.write(frame.serialize());
-}
-
-HttpRequest HttpConnection::read_request() {
-    HttpFrame frame = this->read_frame();
+HttpRequest parse_request_frame(const HttpFrame& frame) {
     vector<string> frame_lines = split(frame.contents, CRLF);
 
     if (frame_lines.size() == 0) {
@@ -224,6 +204,26 @@ HttpRequest HttpConnection::read_request() {
     vector<HttpHeader> headers = parse_headers(header_lines);
 
     return HttpRequest{method, uri, version, headers, "", {0}};
+}
+
+
+HttpRequestParseError::HttpRequestParseError(string message) : runtime_error(message) {}
+
+
+HttpConnection::HttpConnection(shared_ptr<Connection> conn) : conn(conn) {}
+
+HttpConnection::HttpConnection(HttpConnection&& http_conn) : conn(std::move(http_conn.conn)) {}
+
+HttpFrame HttpConnection::read_frame() {
+    return HttpFrame{conn.read_until(CRLFCRLF)};
+}
+
+void HttpConnection::write_frame(HttpFrame frame) {
+    this->conn.write(frame.serialize());
+}
+
+HttpRequest HttpConnection::read_request() {
+    return parse_request_frame(this->read_frame());
 }
 
 void HttpConnection::write_response(HttpResponse response) {

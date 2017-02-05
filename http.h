@@ -93,6 +93,9 @@ public:
 };
 
 
+HttpRequest parse_request_frame(const HttpFrame& frame);
+
+
 class HttpConnection {
     BufferedConnection conn;
 
