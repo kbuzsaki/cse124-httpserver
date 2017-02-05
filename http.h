@@ -2,6 +2,7 @@
 #define HTTP_H
 
 #include <chrono>
+#include <netinet/in.h>
 #include <stdexcept>
 #include <vector>
 #include "connection.h"
@@ -39,6 +40,8 @@ struct HttpRequest {
     std::string version;
     std::vector<HttpHeader> headers;
     std::string body;
+
+    struct in_addr remote_ip;
 
 public:
     HttpFrame pack();

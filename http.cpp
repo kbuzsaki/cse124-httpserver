@@ -211,22 +211,19 @@ HttpRequest HttpConnection::read_request() {
 
     vector<string>& header_lines = frame_lines;
 
-    HttpRequest request;
-
     vector<string> parts = split_n(initial_line, " ", NUM_REQUEST_PARTS - 1);
     if (parts.size() != NUM_REQUEST_PARTS) {
         stringstream error;
         error << "malformed http request line '" << initial_line << "' had " << parts.size() << " parts, expected " << NUM_REQUEST_PARTS;
         throw HttpRequestParseError(error.str());
     }
-    request.method = parts[0];
-    request.uri = parts[1];
-    request.version = parts[2];
 
-    request.headers = parse_headers(header_lines);
-    request.body = "";
+    string method = parts[0];
+    string uri = parts[1];
+    string version = parts[2];
+    vector<HttpHeader> headers = parse_headers(header_lines);
 
-    return request;
+    return HttpRequest{method, uri, version, headers, "", {0}};
 }
 
 void HttpConnection::write_response(HttpResponse response) {

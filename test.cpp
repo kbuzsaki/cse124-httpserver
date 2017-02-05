@@ -209,9 +209,9 @@ void test_mock_handler(TestRunner& runner) {
     MockHttpRequestHandler mock_handler(response);
 
     vector<HttpRequest> requests = {
-        {"GET", "/foo/bar", HTTP_VERSION_1_1, vector<HttpHeader>{HttpHeader{"SomeKey", "somevalue"}}, ""},
-        {"PUT", "/", HTTP_VERSION_0_9, vector<HttpHeader>{}, ""},
-        {"GET", "/baz", HTTP_VERSION_1_0, vector<HttpHeader>{HttpHeader{"SomeOtherKey", "othersomevalue"}, HttpHeader{"foo", "bar"}}, ""}
+        {"GET", "/foo/bar", HTTP_VERSION_1_1, vector<HttpHeader>{HttpHeader{"SomeKey", "somevalue"}}, "", {0}},
+        {"PUT", "/", HTTP_VERSION_0_9, vector<HttpHeader>{}, "", {0}},
+        {"GET", "/baz", HTTP_VERSION_1_0, vector<HttpHeader>{HttpHeader{"SomeOtherKey", "othersomevalue"}, HttpHeader{"foo", "bar"}}, "", {0}}
     };
 
     for (size_t i = 0; i < requests.size(); i++) {
@@ -352,9 +352,9 @@ void test_http_connection(TestRunner& runner) {
     shared_ptr<MockConnection> pipelined_mock_conn = make_shared<MockConnection>(pipelined_request_str);
     HttpConnection pipelined_request_conn(pipelined_mock_conn);
     HttpRequest first_request = pipelined_request_conn.read_request();
-    runner.assert_equal(HttpRequest{"GET", "/foo.html", HTTP_VERSION_1_1, vector<HttpHeader>{{"Host", "fuz"}}, ""}, first_request, "first pipelined request");
+    runner.assert_equal(HttpRequest{"GET", "/foo.html", HTTP_VERSION_1_1, vector<HttpHeader>{{"Host", "fuz"}}, "", {0}}, first_request, "first pipelined request");
     HttpRequest second_request = pipelined_request_conn.read_request();
-    runner.assert_equal(HttpRequest{"GET", "/bar.html", HTTP_VERSION_0_9, vector<HttpHeader>{{"Host", "baz"}}, ""}, second_request, "second pipelined request");
+    runner.assert_equal(HttpRequest{"GET", "/bar.html", HTTP_VERSION_0_9, vector<HttpHeader>{{"Host", "baz"}}, "", {0}}, second_request, "second pipelined request");
     runner.assert_throws<ConnectionClosed>([&](){ pipelined_request_conn.read_request(); }, "third (empty) read from empty pipeline");
 
     // TODO: test body with \r\n sequence
@@ -380,9 +380,9 @@ void test_http_connection(TestRunner& runner) {
 }
 
 void test_http_listener(TestRunner& runner) {
-    HttpRequest request_1{"GET", "/foo/bar", HTTP_VERSION_1_0, vector<HttpHeader>{{"MyHeader", "myval"}}, ""};
-    HttpRequest request_2{"GET", "/", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}}, ""};
-    HttpRequest request_3{"GET", "/foo/bar/baz", HTTP_VERSION_0_9, vector<HttpHeader>{{"MyHeader", "myval3"}}, ""};
+    HttpRequest request_1{"GET", "/foo/bar", HTTP_VERSION_1_0, vector<HttpHeader>{{"MyHeader", "myval"}}, "", {0}};
+    HttpRequest request_2{"GET", "/", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}}, "", {0}};
+    HttpRequest request_3{"GET", "/foo/bar/baz", HTTP_VERSION_0_9, vector<HttpHeader>{{"MyHeader", "myval3"}}, "", {0}};
 
     vector<shared_ptr<MockConnection>> mock_connections = {
             make_shared<MockConnection>(request_1.pack().serialize()),
@@ -423,10 +423,10 @@ void test_http_listener(TestRunner& runner) {
 }
 
 void test_http_server(TestRunner& runner) {
-    HttpRequest bad_request{"GET", "/foo/bar", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}}, ""};
-    HttpRequest request_1{"GET", "/foo/bar", HTTP_VERSION_1_0, vector<HttpHeader>{{"Host", "foo"}, {"MyHeader", "myval"}}, ""};
-    HttpRequest request_2{"GET", "/", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}, {"Host", "bar"}}, ""};
-    HttpRequest request_3{"GET", "/foo/bar/baz", HTTP_VERSION_0_9, vector<HttpHeader>{{"Host", "foobar.com"}, {"MyHeader", "myval3"}}, ""};
+    HttpRequest bad_request{"GET", "/foo/bar", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}}, "", {0}};
+    HttpRequest request_1{"GET", "/foo/bar", HTTP_VERSION_1_0, vector<HttpHeader>{{"Host", "foo"}, {"MyHeader", "myval"}}, "", {0}};
+    HttpRequest request_2{"GET", "/", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}, {"Host", "bar"}}, "", {0}};
+    HttpRequest request_3{"GET", "/foo/bar/baz", HTTP_VERSION_0_9, vector<HttpHeader>{{"Host", "foobar.com"}, {"MyHeader", "myval3"}}, "", {0}};
     vector<shared_ptr<MockConnection>> mock_connections = {
             make_shared<MockConnection>(bad_request.pack().serialize()),
             make_shared<MockConnection>(request_1.pack().serialize()),
@@ -456,8 +456,8 @@ void test_http_server(TestRunner& runner) {
 }
 
 void test_pipelined_http_server(TestRunner& runner) {
-    HttpRequest request_1{"GET", "/foo", HTTP_VERSION_1_0, vector<HttpHeader>{{"Host", "foo"}, {"MyHeader", "myval"}}, ""};
-    HttpRequest request_2{"GET", "/bar", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}, {"Host", "bar"}}, ""};
+    HttpRequest request_1{"GET", "/foo", HTTP_VERSION_1_0, vector<HttpHeader>{{"Host", "foo"}, {"MyHeader", "myval"}}, "", {0}};
+    HttpRequest request_2{"GET", "/bar", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}, {"Host", "bar"}}, "", {0}};
     vector<shared_ptr<MockConnection>> mock_connections = {
             make_shared<MockConnection>(request_1.pack().serialize() + request_2.pack().serialize())
     };
@@ -487,19 +487,19 @@ void test_file_serving_handler(TestRunner& runner) {
 
     FileServingHttpHandler handler(mock_repository);
 
-    HttpRequest foo_request = HttpRequest{"GET", "/foo.html", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
+    HttpRequest foo_request = HttpRequest{"GET", "/foo.html", HTTP_VERSION_1_1, vector<HttpHeader>{}, "", {0}};
     HttpResponse foo_response = handler.handle_request(foo_request);
     runner.assert_equal(ok_response("foo.html contents here", "text/html", foo_file_time), foo_response, "wrong response for good public file");
 
-    HttpRequest bar_request = HttpRequest{"GET", "/bar", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
+    HttpRequest bar_request = HttpRequest{"GET", "/bar", HTTP_VERSION_1_1, vector<HttpHeader>{}, "", {0}};
     HttpResponse bar_response = handler.handle_request(bar_request);
     runner.assert_equal(forbidden_response(), bar_response, "wrong response for private file");
 
-    HttpRequest missing_request = HttpRequest{"GET", "/missing", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
+    HttpRequest missing_request = HttpRequest{"GET", "/missing", HTTP_VERSION_1_1, vector<HttpHeader>{}, "", {0}};
     HttpResponse missing_response = handler.handle_request(missing_request);
     runner.assert_equal(not_found_response(), missing_response, "wrong response for missing file");
 
-    HttpRequest nested_request = HttpRequest{"GET", "/baz/car/tar", HTTP_VERSION_1_1, vector<HttpHeader>{}, ""};
+    HttpRequest nested_request = HttpRequest{"GET", "/baz/car/tar", HTTP_VERSION_1_1, vector<HttpHeader>{}, "", {0}};
     HttpResponse nested_response = handler.handle_request(nested_request);
     runner.assert_equal(ok_response("baz/car/tar contents here", "text/plain", system_clock::time_point()), nested_response, "wrong response for nested file");
 }
