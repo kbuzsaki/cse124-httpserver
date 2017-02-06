@@ -37,6 +37,7 @@ class HttpServerTest(unittest.TestCase):
         self.port = 6060
         self.base_path = "itest_files/"
         self.base_url = "http://" + self.host + ":" + str(self.port)
+        self.base_url_192 = "http://192.168.0.3:" + str(self.port)
         self.default_headers = {
             'Server': 'TritonHTTP/0.1',
             'Content-Length': '0',
@@ -68,25 +69,30 @@ class HttpServerTest(unittest.TestCase):
         self.assertEqual(body, resp.content)
         self.assertDictEqual(headers, dict(resp.headers))
 
+    def make_request(self, path):
+        return requests.get(self.base_url + "/" + path, timeout=1)
+
     def assert_request(self, path, status, headers, body):
         resp = requests.get(self.base_url + "/" + path, timeout=1)
         self.assert_response(resp, status, headers, body)
 
-    def assert_good_resp(self, path, body, content_type, last_modified):
+    def assert_good_resp(self, resp, body, content_type, last_modified):
         headers = {
             'Server': 'TritonHTTP/0.1',
             'Content-Length': str(len(body)),
             'Content-Type': content_type,
             'Last-Modified': last_modified
         }
-        self.assert_request(path, STATUS_OK, headers, body)
+        self.assert_response(resp, STATUS_OK, headers, body)
 
     def assert_good_file(self, path, content_type):
         self.assertTrue(self.get_world_readable(path))
         body = self.get_contents(path)
         last_modified = self.get_last_modified(path)
 
-        self.assert_good_resp(path, body, content_type, last_modified)
+        resp = self.make_request(path)
+
+        self.assert_good_resp(resp, body, content_type, last_modified)
 
     def assert_bad_request(self, path):
         self.assert_request(path, STATUS_BAD_REQUEST, self.default_headers, b"")
@@ -139,7 +145,7 @@ class HttpServerTest(unittest.TestCase):
         content_type = "text/html"
         last_modified = self.get_last_modified("index.html")
 
-        self.assert_good_resp("", body, content_type, last_modified)
+        self.assert_good_resp(self.make_request(""), body, content_type, last_modified)
 
     def read_response(self, sock):
         response = HTTPResponse(sock)
@@ -204,6 +210,17 @@ class HttpServerTest(unittest.TestCase):
             self.fail("Unable to make a concurrent request")
         finally:
             blocker.close()
+
+    def test_htaccess_deny(self):
+        resp = requests.get(self.base_url_192 + "/subdir/foo.html")
+        self.assert_response(resp, STATUS_FORBIDDEN, self.default_headers, b"")
+
+    def test_htaccess_allow(self):
+        self.assert_forbidden("allow_subdir/bar.html")
+        resp = requests.get(self.base_url_192 + "/allow_subdir/bar.html")
+        contents = self.get_contents("allow_subdir/bar.html")
+        last_modified = self.get_last_modified("allow_subdir/bar.html")
+        self.assert_good_resp(resp, contents, "text/html", last_modified)
 
 
 if __name__ == "__main__":

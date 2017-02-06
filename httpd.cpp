@@ -36,11 +36,20 @@ public:
     }
 };
 
+
+shared_ptr<HttpRequestHandler> wrap_htaccess_middleware(shared_ptr<FileRepository> repository, shared_ptr<HttpRequestHandler> handler) {
+    shared_ptr<DnsClient> dns_client = make_shared<NetworkDnsClient>();
+    shared_ptr<RequestFilter> htaccess_filter = make_shared<HtAccessRequestFilter>(repository, dns_client);
+    return make_shared<RequestFilterMiddleware>(htaccess_filter, handler);
+}
+
 void start_httpd(unsigned short port, string doc_root, ThreadModel thread_model) {
     cerr << "Starting server (port: " << port << ", doc_root: " << doc_root << ")" << endl;
 
     shared_ptr<FileRepository> repository = make_shared<DirectoryFileRepository>(doc_root);
-    shared_ptr<HttpRequestHandler> request_handler = make_shared<FileServingHttpHandler>(repository);
+    shared_ptr<HttpRequestHandler> file_serving_handler = make_shared<FileServingHttpHandler>(repository);
+
+    shared_ptr<HttpRequestHandler> request_handler = wrap_htaccess_middleware(repository, file_serving_handler);
 
     shared_ptr<HttpConnectionHandler> connection_handler;
     if (thread_model == NO_THREADS) {
