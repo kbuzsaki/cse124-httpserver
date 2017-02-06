@@ -3,6 +3,7 @@
 
 using std::shared_ptr;
 using std::string;
+using std::vector;
 
 string infer_content_type(string);
 
@@ -41,4 +42,15 @@ string infer_content_type(string filename) {
         return "image/png";
     }
     return "text/plain";
+}
+
+
+RequestFilterMiddleware::RequestFilterMiddleware(std::shared_ptr<RequestFilter> filter, std::shared_ptr<HttpRequestHandler> handler)
+        : filter(filter), handler(handler) {}
+
+HttpResponse RequestFilterMiddleware::handle_request(const HttpRequest& request) {
+    if (filter->allow_request(request)) {
+        return handler->handle_request(request);
+    }
+    return forbidden_response();
 }

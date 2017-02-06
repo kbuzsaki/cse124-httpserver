@@ -599,6 +599,20 @@ void test_htaccess_request_filter(TestRunner& runner) {
     runner.assert_true(deny_filter.allow_request(make_request("/bar/foo.html", {}, parse_ip("123.5.0.1"))), "/bar/foo.html from 123.5.");
 }
 
+void test_request_filter_middleware(TestRunner& runner) {
+    HttpResponse good_response = make_response(OK_STATUS, vector<HttpHeader>{{"SomeHeader", "someval"}}, "foobar");
+    shared_ptr<RequestFilter> mock_filter = make_shared<MockRequestFilter>(vector<pair<HttpRequest,bool>>{make_pair(make_request("/foo/bar.html"), false)});
+    shared_ptr<MockHttpRequestHandler> mock_handler = make_shared<MockHttpRequestHandler>(good_response);
+    RequestFilterMiddleware middleware(mock_filter, mock_handler);
+
+    runner.assert_equal(good_response, middleware.handle_request(make_request("/")), "filter middleware /");
+    runner.assert_equal(good_response, middleware.handle_request(make_request("/foo.html")), "filter middleware /foo.html");
+    runner.assert_equal(good_response, middleware.handle_request(make_request("/bar/bar.html")), "filter middleware /bar/bar.html");
+    runner.assert_equal(good_response, middleware.handle_request(make_request("/foo/bar/baz.html")), "filter middleware /foo/bar/baz.html");
+
+    runner.assert_equal(forbidden_response(), middleware.handle_request(make_request("/foo/bar.html")), "filter middleware /foo/bar.html");
+}
+
 typedef void (*TestFunc)(TestRunner&);
 
 int main() {
@@ -622,7 +636,8 @@ int main() {
         test_pipelined_http_server,
         test_file_serving_handler,
         test_cidr_block,
-        test_htaccess_request_filter
+        test_htaccess_request_filter,
+        test_request_filter_middleware
     };
 
     for (size_t i = 0; i < test_funcs.size(); i++) {
