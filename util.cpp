@@ -148,6 +148,7 @@ system_clock::time_point to_time_point(time_t t) {
 std::string to_http_date(const system_clock::time_point& tp) {
     char buf[1024];
     time_t t = system_clock::to_time_t(tp);
+    // TODO not thread safe
     struct tm tm = *gmtime(&t);
     // TODO: check this return value?
     strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
