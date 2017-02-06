@@ -35,10 +35,10 @@ public:
 
 class SocketConnection : public Connection {
     int client_sock;
+    struct in_addr client_remote_ip;
 
 public:
-    SocketConnection();
-    SocketConnection(int client_sock);
+    SocketConnection(int client_sock, struct in_addr client_remote_ip);
     SocketConnection(SocketConnection&&);
     virtual ~SocketConnection();
 

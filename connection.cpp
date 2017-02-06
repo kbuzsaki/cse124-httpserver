@@ -24,9 +24,7 @@ ConnectionError::ConnectionError(string message) : runtime_error(message) {}
 ConnectionClosed::ConnectionClosed() : runtime_error("connection closed") {}
 
 
-SocketConnection::SocketConnection() : client_sock(INVALID_SOCK) {}
-
-SocketConnection::SocketConnection(int client_sock) : client_sock(client_sock) {
+SocketConnection::SocketConnection(int client_sock, struct in_addr client_remote_ip) : client_sock(client_sock), client_remote_ip(client_remote_ip) {
     struct timeval tv;
     tv.tv_sec = 10;
     tv.tv_usec = 0;
@@ -93,13 +91,7 @@ bool SocketConnection::is_closed() {
 }
 
 struct in_addr SocketConnection::remote_ip() {
-    socklen_t len;
-    struct sockaddr_in remote;
-    int err = getpeername(client_sock, (struct sockaddr*)&remote, &len);
-    if (err < 0) {
-        throw runtime_error(errno_message("getpeername() failed: "));
-    }
-    return remote.sin_addr;
+    return client_remote_ip;
 }
 
 

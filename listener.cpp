@@ -59,5 +59,5 @@ shared_ptr<Connection> SocketListener::accept() {
         throw ListenerError(errno_message("accept() failed: "));
     }
 
-    return make_shared<SocketConnection>(client_sock);
+    return make_shared<SocketConnection>(client_sock, client_addr.sin_addr);
 }
