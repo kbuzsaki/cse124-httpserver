@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <string>
 #include <vector>
+#include "dns_client.h"
 
 class CidrBlock {
     struct in_addr prefix;
@@ -40,6 +41,6 @@ public:
 };
 
 
-HtAccess parse_htaccess_rules(std::string rule_str);
+HtAccess parse_htaccess_rules(std::string rule_str, std::shared_ptr<DnsClient> dns_client);
 
 #endif //HTACCESS_H

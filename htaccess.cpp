@@ -1,13 +1,16 @@
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <sstream>
 #include <arpa/inet.h>
 #include "htaccess.h"
+#include "dns_client.h"
 #include "util.h"
 
 using std::cerr;
 using std::endl;
 using std::runtime_error;
+using std::shared_ptr;
 using std::stoi;
 using std::string;
 using std::stringstream;
@@ -76,3 +79,66 @@ CidrBlock parse_cidr(string cidr_str) {
 }
 
 
+HtAccess::HtAccess(vector<HtAccessRule> rules) : rules(rules) {}
+
+bool HtAccess::allows(struct in_addr address) {
+    for (size_t i = 0; i < rules.size(); i++) {
+        HtAccessRule& rule = rules[i];
+
+        if (rule.pattern.matches(address)) {
+            return rule.allow;
+        }
+    }
+
+    return true;
+}
+
+
+bool parse_allow_deny(string allow_str) {
+    if (allow_str == "allow") {
+        return true;
+    } else if (allow_str == "deny") {
+        return false;
+    } else {
+        throw runtime_error("invalid allow/deny in htaccess: '" + allow_str + "'");
+    }
+}
+
+vector<CidrBlock> parse_cidr_or_domain(string host_str, shared_ptr<DnsClient> dns_client) {
+    try {
+        return vector<CidrBlock>{parse_cidr(host_str)};
+    } catch (runtime_error&) {
+        // if we failed to parse the block, then try to use dns instead
+        vector<CidrBlock> blocks;
+        vector<struct in_addr> ips = dns_client->lookup(host_str);
+        for (size_t i = 0; i < ips.size(); i++) {
+            blocks.push_back(CidrBlock{ips[i], BITS_IN_ADDRESS});
+        }
+        return blocks;
+    }
+}
+
+HtAccess parse_htaccess_rules(string rules_str, shared_ptr<DnsClient> dns_client) {
+    vector<HtAccessRule> rules;
+
+    vector<string> rules_lines = split(rules_str, "\n");
+    for (size_t i = 0; i < rules_lines.size(); i++) {
+        if (rules_lines[i] == "") {
+            continue;
+        }
+
+        vector<string> rule_components = split(rules_lines[i], " from ");
+        if (rule_components.size() != 2) {
+            throw runtime_error("invalid rule line in htaccess: '" + rules_lines[i] + "'");
+        }
+
+        bool allow = parse_allow_deny(rule_components[0]);
+        vector<CidrBlock> blocks = parse_cidr_or_domain(rule_components[1], dns_client);
+
+        for (size_t j = 0; j < blocks.size(); j++) {
+            rules.push_back(HtAccessRule{blocks[j], allow});
+        }
+    }
+
+    return HtAccess(rules);
+}
