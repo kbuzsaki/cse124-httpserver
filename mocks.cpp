@@ -129,3 +129,16 @@ std::vector<struct in_addr> MockDnsClient::lookup(std::string domain) {
 
     return mock_results.at(domain);
 }
+
+
+MockRequestFilter::MockRequestFilter(std::vector<std::pair<HttpRequest, bool>> mock_results) : mock_results(mock_results) {}
+
+bool MockRequestFilter::allow_request(const HttpRequest& request) {
+    for (size_t i = 0; i < mock_results.size(); i++) {
+        if (mock_results[i].first == request) {
+            return mock_results[i].second;
+        }
+    }
+
+    return true;
+}

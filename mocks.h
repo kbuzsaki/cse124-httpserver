@@ -8,6 +8,7 @@
 #include "http.h"
 #include "file_repository.h"
 #include "listener.h"
+#include "request_filters.h"
 #include "server.h"
 
 
@@ -91,6 +92,16 @@ public:
     MockDnsClient(std::unordered_map<std::string, std::vector<struct in_addr>> mock_results);
 
     virtual std::vector<struct in_addr> lookup(std::string domain);
+};
+
+
+class MockRequestFilter : public RequestFilter {
+    const std::vector<std::pair<HttpRequest, bool>> mock_results;
+
+public:
+    MockRequestFilter(std::vector<std::pair<HttpRequest, bool>> mock_results);
+
+    virtual bool allow_request(const HttpRequest& request);
 };
 
 #endif //MOCKS_H

@@ -8,6 +8,7 @@
 #include "connection_handlers.h"
 #include "htaccess.h"
 #include "http.h"
+#include "request_filters.h"
 #include "request_handlers.h"
 #include "listener.h"
 #include "mocks.h"
@@ -557,6 +558,47 @@ void test_cidr_block(TestRunner& runner) {
     runner.assert_throws<runtime_error>([](){ parse_cidr("192.0.0.0/0"); }, "instantiating cidr block with prefix larger than length");
 }
 
+void test_htaccess_request_filter(TestRunner& runner) {
+    HtAccessRequestFilter empty_filter(
+            make_shared<MockFileRepository>(unordered_map<string, shared_ptr<File>>{}),
+            make_shared<NopDnsClient>()
+    );
+
+    runner.assert_true(empty_filter.allow_request(make_request("/")), "empty htaccess filter /");
+    runner.assert_true(empty_filter.allow_request(make_request("/foo")), "empty htaccess filter /foo");
+    runner.assert_true(empty_filter.allow_request(make_request("/foo/bar")), "empty htaccess filter /foo/bar");
+
+
+    unordered_map<string, shared_ptr<File>> mock_deny_files = {
+            {"/foo/.htaccess", make_file("deny from 192.0.0.0/8")},
+            {"/bar/.htaccess", make_file("deny from 123.4.0.0/16")}
+    };
+    HtAccessRequestFilter deny_filter(
+            make_shared<MockFileRepository>(mock_deny_files),
+            make_shared<NopDnsClient>()
+    );
+
+    runner.assert_true(deny_filter.allow_request(make_request("/", {}, parse_ip("10.0.0.1"))), "/ from 10.");
+    runner.assert_true(deny_filter.allow_request(make_request("/foo.html", {}, parse_ip("10.0.0.1"))), "/foo.html from 10.");
+    runner.assert_true(deny_filter.allow_request(make_request("/foo/bar.html", {}, parse_ip("10.0.0.1"))), "/foo/bar.html from 10.");
+    runner.assert_true(deny_filter.allow_request(make_request("/bar/foo.html", {}, parse_ip("10.0.0.1"))), "/bar/foo.html from 10.");
+
+    runner.assert_true(deny_filter.allow_request(make_request("/", {}, parse_ip("192.168.0.1"))), "/ from 192.");
+    runner.assert_true(deny_filter.allow_request(make_request("/foo.html", {}, parse_ip("192.168.0.1"))), "/foo.html from 192.");
+    runner.assert_false(deny_filter.allow_request(make_request("/foo/bar.html", {}, parse_ip("192.168.0.1"))), "/foo/bar.html from 192.");
+    runner.assert_true(deny_filter.allow_request(make_request("/bar/foo.html", {}, parse_ip("192.168.0.1"))), "/bar/foo.html from 192.");
+
+    runner.assert_true(deny_filter.allow_request(make_request("/", {}, parse_ip("123.4.0.1"))), "/ from 123.4.");
+    runner.assert_true(deny_filter.allow_request(make_request("/foo.html", {}, parse_ip("123.4.0.1"))), "/foo.html from 123.4.");
+    runner.assert_true(deny_filter.allow_request(make_request("/foo/bar.html", {}, parse_ip("123.4.0.1"))), "/foo/bar.html from 123.4.");
+    runner.assert_false(deny_filter.allow_request(make_request("/bar/foo.html", {}, parse_ip("123.4.0.1"))), "/bar/foo.html from 123.4.");
+
+    runner.assert_true(deny_filter.allow_request(make_request("/", {}, parse_ip("123.5.0.1"))), "/ from 123.5.");
+    runner.assert_true(deny_filter.allow_request(make_request("/foo.html", {}, parse_ip("123.5.0.1"))), "/foo.html from 123.5.");
+    runner.assert_true(deny_filter.allow_request(make_request("/foo/bar.html", {}, parse_ip("123.5.0.1"))), "/foo/bar.html from 123.5.");
+    runner.assert_true(deny_filter.allow_request(make_request("/bar/foo.html", {}, parse_ip("123.5.0.1"))), "/bar/foo.html from 123.5.");
+}
+
 typedef void (*TestFunc)(TestRunner&);
 
 int main() {
@@ -579,7 +621,8 @@ int main() {
         test_http_server,
         test_pipelined_http_server,
         test_file_serving_handler,
-        test_cidr_block
+        test_cidr_block,
+        test_htaccess_request_filter
     };
 
     for (size_t i = 0; i < test_funcs.size(); i++) {
