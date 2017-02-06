@@ -18,7 +18,9 @@ void HttpConnection::write_frame(HttpFrame frame) {
 }
 
 HttpRequest HttpConnection::read_request() {
-    return parse_request_frame(this->read_frame());
+    HttpRequest request = parse_request_frame(this->read_frame());
+    request.remote_ip = conn.remote_ip();
+    return request;
 }
 
 void HttpConnection::write_response(HttpResponse response) {

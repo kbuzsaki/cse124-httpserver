@@ -99,6 +99,19 @@ int array_size(const T (&)[S]) {
     return S;
 }
 
+HttpRequest make_request(string uri, vector<HttpHeader> headers={}, struct in_addr remote_ip={0}) {
+    return {"GET", uri, HTTP_VERSION_1_1, headers, "", remote_ip};
+}
+
+HttpResponse make_response(HttpStatus status, vector<HttpHeader> headers={}, string body="") {
+    return {HTTP_VERSION_1_1, status, headers, body};
+}
+
+shared_ptr<MockFile> make_file(string contents) {
+    return make_shared<MockFile>(true, contents, system_clock::time_point());
+}
+
+
 void test_split(TestRunner& runner) {
     runner.assert_equal(vector<string>{""}, split_n("", " ", 10), "split_n 10 with empty string");
     runner.assert_equal(vector<string>{"a"}, split("a", " "), "splitting on space with 1 part");
@@ -423,10 +436,10 @@ void test_http_listener(TestRunner& runner) {
 }
 
 void test_http_server(TestRunner& runner) {
-    HttpRequest bad_request{"GET", "/foo/bar", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}}, "", {0}};
-    HttpRequest request_1{"GET", "/foo/bar", HTTP_VERSION_1_0, vector<HttpHeader>{{"Host", "foo"}, {"MyHeader", "myval"}}, "", {0}};
-    HttpRequest request_2{"GET", "/", HTTP_VERSION_1_1, vector<HttpHeader>{{"MyHeader", "myval2"}, {"Host", "bar"}}, "", {0}};
-    HttpRequest request_3{"GET", "/foo/bar/baz", HTTP_VERSION_0_9, vector<HttpHeader>{{"Host", "foobar.com"}, {"MyHeader", "myval3"}}, "", {0}};
+    HttpRequest bad_request = make_request("/foo/bar", vector<HttpHeader>{{"MyHeader", "myval2"}});
+    HttpRequest request_1 = make_request("/foo/bar", vector<HttpHeader>{{"Host", "foo"}, {"MyHeader", "myval"}});
+    HttpRequest request_2 = make_request("/", vector<HttpHeader>{{"MyHeader", "myval2"}, {"Host", "bar"}});
+    HttpRequest request_3 = make_request("/foo/bar/baz", vector<HttpHeader>{{"Host", "foobar.com"}, {"MyHeader", "myval3"}});
     vector<shared_ptr<MockConnection>> mock_connections = {
             make_shared<MockConnection>(bad_request.pack().serialize()),
             make_shared<MockConnection>(request_1.pack().serialize()),
@@ -436,7 +449,7 @@ void test_http_server(TestRunner& runner) {
     };
     shared_ptr<MockListener> mock_listener = make_shared<MockListener>(mock_connections);
 
-    HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"OtherKey", "othervalue"}}, ""};
+    HttpResponse response = make_response(OK_STATUS, vector<HttpHeader>{{"OtherKey", "othervalue"}});
     shared_ptr<MockHttpRequestHandler> mock_request_handler = make_shared<MockHttpRequestHandler>(response);
     shared_ptr<HttpConnectionHandler> connection_handler = make_shared<BlockingHttpConnectionHandler>(mock_request_handler);
 

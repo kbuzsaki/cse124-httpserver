@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <netinet/in.h>
 #include <string>
 #include <sstream>
 
@@ -15,6 +16,8 @@ public:
     virtual void write(std::string) = 0;
     virtual void close() = 0;
     virtual bool is_closed() = 0;
+
+    virtual struct in_addr remote_ip() = 0;
 };
 
 
@@ -43,6 +46,8 @@ public:
     virtual void write(std::string);
     virtual void close();
     virtual bool is_closed();
+
+    virtual struct in_addr remote_ip();
 };
 
 
@@ -60,6 +65,8 @@ public:
     void write(std::string body);
     void close();
     bool is_closed();
+
+    struct in_addr remote_ip();
 };
 
 #endif // CONNECTION_H

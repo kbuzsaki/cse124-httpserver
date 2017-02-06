@@ -12,9 +12,11 @@ using std::vector;
 #define BUFFER_SIZE (5000)
 
 
-MockConnection::MockConnection(string payload) : read_payload(payload), write_payload(), read_size(DEFAULT_READ_SIZE), closed(false) {}
+MockConnection::MockConnection(string payload, struct in_addr mock_remote_ip)
+        : read_payload(payload), write_payload(), read_size(DEFAULT_READ_SIZE), closed(false), mock_remote_ip(mock_remote_ip) {}
 
-MockConnection::MockConnection(string payload, int read_size) : read_payload(payload), write_payload(), read_size(read_size), closed(false) {}
+MockConnection::MockConnection(string payload, int read_size, struct in_addr mock_remote_ip)
+        : read_payload(payload), write_payload(), read_size(read_size), closed(false), mock_remote_ip(mock_remote_ip) {}
 
 MockConnection::~MockConnection() {}
 
@@ -42,6 +44,10 @@ void MockConnection::close() {
 
 bool MockConnection::is_closed() {
     return closed;
+}
+
+struct in_addr MockConnection::remote_ip() {
+    return mock_remote_ip;
 }
 
 string MockConnection::written() {

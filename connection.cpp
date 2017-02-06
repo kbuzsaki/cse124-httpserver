@@ -1,6 +1,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <iostream>
+#include <stdexcept>
 #include <sys/socket.h>
 #include "connection.h"
 #include "util.h"
@@ -8,6 +9,7 @@
 using std::cerr;
 using std::endl;
 using std::ios;
+using std::runtime_error;
 using std::shared_ptr;
 using std::string;
 using std::stringstream;
@@ -90,6 +92,16 @@ bool SocketConnection::is_closed() {
     return this->client_sock == INVALID_SOCK;
 }
 
+struct in_addr SocketConnection::remote_ip() {
+    socklen_t len;
+    struct sockaddr_in remote;
+    int err = getpeername(client_sock, (struct sockaddr*)&remote, &len);
+    if (err < 0) {
+        throw runtime_error(errno_message("getpeername() failed: "));
+    }
+    return remote.sin_addr;
+}
+
 
 BufferedConnection::BufferedConnection() : conn(), buffer() {}
 
@@ -142,6 +154,10 @@ string BufferedConnection::read_until(string sep) {
 
     // if we get a failed read (empty string), just give up and return what's in the buffer
     return pop_n_sstream(this->buffer, sstream_size(this->buffer), 0);
+}
+
+struct in_addr BufferedConnection::remote_ip() {
+    return conn->remote_ip();
 }
 
 

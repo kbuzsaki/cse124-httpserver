@@ -16,16 +16,19 @@ class MockConnection : public Connection {
     std::stringstream write_payload;
     int read_size;
     bool closed;
+    struct in_addr mock_remote_ip;
 
 public:
-    MockConnection(std::string payload);
-    MockConnection(std::string payload, int read_size);
+    MockConnection(std::string payload, struct in_addr mock_remote_ip={0});
+    MockConnection(std::string payload, int read_size, struct in_addr mock_remote_ip={0});
     virtual ~MockConnection();
 
     virtual std::string read();
     virtual void write(std::string);
     virtual void close();
     virtual bool is_closed();
+
+    virtual struct in_addr remote_ip();
 
     std::string written();
 };
