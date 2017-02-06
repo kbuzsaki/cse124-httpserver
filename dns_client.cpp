@@ -1,5 +1,6 @@
 #include <netdb.h>
 #include <stdexcept>
+#include <strings.h>
 #include "dns_client.h"
 
 using std::runtime_error;

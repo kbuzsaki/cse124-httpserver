@@ -1,6 +1,7 @@
 #ifndef SYNCHRONIZED_QUEUE_H
 #define SYNCHRONIZED_QUEUE_H
 
+#include <condition_variable>
 #include <mutex>
 #include <queue>
 
