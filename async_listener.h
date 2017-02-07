@@ -15,10 +15,11 @@ public:
     ~AsyncSocketListener();
 
     void listen();
-    std::shared_ptr<AsyncConnection> accept();
+    std::shared_ptr<SocketAsyncConnection> accept();
 
     virtual int get_fd();
     virtual short get_events();
+    virtual bool done();
     virtual std::shared_ptr<Pollable> notify(short revents);
 };
 

@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include "async_listener.h"
+#include "async_connection_handler.h"
 #include "listener.h"
 #include "util.h"
 
@@ -49,7 +50,7 @@ void AsyncSocketListener::listen() {
     }
 }
 
-shared_ptr<AsyncConnection> AsyncSocketListener::accept() {
+shared_ptr<SocketAsyncConnection> AsyncSocketListener::accept() {
     std::cerr << "called async accept! " << std::endl;
     struct sockaddr_in client_addr;
     unsigned int client_len = sizeof(client_addr);
@@ -72,7 +73,11 @@ short AsyncSocketListener::get_events() {
     return POLLIN;
 }
 
+bool AsyncSocketListener::done() {
+    return false;
+}
+
 std::shared_ptr<Pollable> AsyncSocketListener::notify(short) {
-    return accept();
+    return handle_socket_connection(accept());
 }
 

@@ -13,6 +13,8 @@ public:
     // get_events returns the events that poll() should check for
     virtual short get_events() = 0;
 
+    virtual bool done() = 0;
+
     // TODO: add a timeout
 
     /**
@@ -26,6 +28,7 @@ public:
 class AsyncEventLoop {
     std::vector<std::shared_ptr<Pollable>> pollables;
 
+    void prune();
 public:
     void register_pollable(std::shared_ptr<Pollable> pollable);
     void loop();

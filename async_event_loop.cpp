@@ -6,9 +6,22 @@
 
 using std::shared_ptr;
 using std::runtime_error;
+using std::vector;
 
-#define DEFAULT_TIMEOUT (1 * 1000)
+#define DEFAULT_TIMEOUT (10 * 1000)
 
+
+void AsyncEventLoop::prune() {
+    vector<shared_ptr<Pollable>> not_done;
+
+    for (size_t i = 0; i < pollables.size(); i++) {
+        if (!pollables[i]->done()) {
+            not_done.push_back(pollables[i]);
+        }
+    }
+
+    pollables = not_done;
+}
 
 void AsyncEventLoop::register_pollable(shared_ptr<Pollable> pollable) {
     pollables.push_back(pollable);
@@ -56,5 +69,7 @@ void AsyncEventLoop::loop() {
 
         // TODO: exception safety?
         delete[] pollfds;
+
+        prune();
     }
 }
