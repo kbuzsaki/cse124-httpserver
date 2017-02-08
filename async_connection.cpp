@@ -15,11 +15,11 @@ using std::string;
 
 class SocketReadPollable : public Pollable {
     SocketAsyncConnection& conn;
-    function<shared_ptr<Pollable> (string)> callback;
+    Callback<string>::F callback;
     bool is_done;
 
 public:
-    SocketReadPollable(SocketAsyncConnection& conn, function<shared_ptr<Pollable> (string)> callback) : conn(conn), callback(callback), is_done(false) {}
+    SocketReadPollable(SocketAsyncConnection& conn, Callback<string>::F callback) : conn(conn), callback(callback), is_done(false) {}
 
     virtual int get_fd() {
         return conn.client_sock;
@@ -44,11 +44,11 @@ public:
 class SocketWritePollable : public Pollable {
     SocketAsyncConnection& conn;
     string message;
-    function<shared_ptr<Pollable> ()> callback;
+    Callback<>::F callback;
     bool is_done;
 
 public:
-    SocketWritePollable(SocketAsyncConnection& conn, string message, function<shared_ptr<Pollable> ()> callback)
+    SocketWritePollable(SocketAsyncConnection& conn, string message, Callback<>::F callback)
             : conn(conn), message(message), callback(callback), is_done(false) {}
 
     virtual int get_fd() {
@@ -78,11 +78,11 @@ SocketAsyncConnection::SocketAsyncConnection(int client_sock, struct in_addr cli
 
 
 
-std::shared_ptr<Pollable> SocketAsyncConnection::read(function<shared_ptr<Pollable>(string)> callback) {
+std::shared_ptr<Pollable> SocketAsyncConnection::read(Callback<string>::F callback) {
     return make_shared<SocketReadPollable>(*this, callback);
 }
 
-std::shared_ptr<Pollable> SocketAsyncConnection::write(string msg, function<shared_ptr<Pollable>()> callback) {
+std::shared_ptr<Pollable> SocketAsyncConnection::write(string msg, Callback<>::F callback) {
     return make_shared<SocketWritePollable>(*this, msg, callback);
 }
 

@@ -20,8 +20,8 @@ class SocketAsyncConnection {
 public:
     SocketAsyncConnection(int client_sock, struct in_addr client_remote_ip);
 
-    virtual std::shared_ptr<Pollable> read(std::function<std::shared_ptr<Pollable> (std::string)> callback);
-    virtual std::shared_ptr<Pollable> write(std::string, std::function<std::shared_ptr<Pollable> ()> callback);
+    virtual std::shared_ptr<Pollable> read(Callback<std::string>::F callback);
+    virtual std::shared_ptr<Pollable> write(std::string, Callback<>::F callback);
 };
 
 

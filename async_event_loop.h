@@ -25,6 +25,12 @@ public:
     virtual std::shared_ptr<Pollable> notify(short revents) = 0;
 };
 
+// Convenience typedef to enable `Callback<string>::F` instead of `std::function<std::shared_ptr<Pollable> (string)>`
+template<class ...Args>
+struct Callback {
+    typedef std::function<std::shared_ptr<Pollable> (Args...)> F;
+};
+
 class AsyncEventLoop {
     std::vector<std::shared_ptr<Pollable>> pollables;
 
