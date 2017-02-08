@@ -65,7 +65,6 @@ shared_ptr<SocketAsyncConnection> AsyncSocketListener::accept() {
 
 
 int AsyncSocketListener::get_fd() {
-    std::cerr << "getting listener fd " << sock << std::endl;
     return sock;
 }
 

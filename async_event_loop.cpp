@@ -49,15 +49,13 @@ void AsyncEventLoop::loop() {
             throw runtime_error(errno_message("poll() failed: "));
         }
 
-        std::cerr << "poll() returned: " << ret << std::endl;
-
         // TODO: prune pollables?
         for (size_t i = 0; i < pollables_size; i++) {
             short revents = pollfds[i].revents;
 
-            std::cerr << "revents for fd " << pollfds[i].fd << ": " << std::hex << revents << std::endl;
-
             if (revents != 0) {
+                std::cerr << "revents for fd " << pollfds[i].fd << ": " << std::hex << revents << std::endl;
+
                 shared_ptr<Pollable> pollable = pollables[i]->notify(revents);
 
                 if (pollable != NULL) {

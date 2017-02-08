@@ -35,7 +35,6 @@ public:
 
     virtual std::shared_ptr<Pollable> notify(short) {
         is_done = true;
-        std::cerr << "in read notify (" << conn.client_remote_ip << ")" << std::endl;
         return callback(conn.inner_read());
     }
 };
@@ -65,7 +64,6 @@ public:
 
     virtual std::shared_ptr<Pollable> notify(short) {
         is_done = true;
-        std::cerr << "in write notify" << std::endl;
         conn.inner_write(message);
         return callback();
     }
@@ -74,7 +72,9 @@ public:
 
 
 SocketAsyncConnection::SocketAsyncConnection(int client_sock, struct in_addr client_remote_ip)
-        : client_sock(client_sock), client_remote_ip(client_remote_ip) {}
+        : client_sock(client_sock), client_remote_ip(client_remote_ip) {
+    std::cerr << "Initialized socket for ip: " << this->client_remote_ip << std::endl;
+}
 
 
 
