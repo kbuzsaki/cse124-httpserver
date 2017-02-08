@@ -48,7 +48,7 @@ async_httpd: $(ASYNC_OBJS)
 	$(CXX) $(CXXFLAGS) -o async_httpd $(ASYNC_OBJS) -lpthread
 
 async: async_httpd
-	./async_httpd
+	./async_httpd 6060 files
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
