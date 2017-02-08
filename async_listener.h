@@ -15,7 +15,7 @@ public:
     ~AsyncSocketListener();
 
     void listen();
-    std::shared_ptr<SocketAsyncConnection> accept();
+    std::shared_ptr<AsyncSocketConnection> accept();
 
     virtual int get_fd();
     virtual short get_events();

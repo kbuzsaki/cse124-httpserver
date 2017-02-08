@@ -50,7 +50,7 @@ void AsyncSocketListener::listen() {
     }
 }
 
-shared_ptr<SocketAsyncConnection> AsyncSocketListener::accept() {
+shared_ptr<AsyncSocketConnection> AsyncSocketListener::accept() {
     std::cerr << "called async accept! " << std::endl;
     struct sockaddr_in client_addr;
     unsigned int client_len = sizeof(client_addr);
@@ -60,7 +60,7 @@ shared_ptr<SocketAsyncConnection> AsyncSocketListener::accept() {
         throw ListenerError(errno_message("accept() failed: "));
     }
 
-    return make_shared<SocketAsyncConnection>(client_sock, client_addr.sin_addr);
+    return make_shared<AsyncSocketConnection>(client_sock, client_addr.sin_addr);
 }
 
 
