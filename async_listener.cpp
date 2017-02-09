@@ -63,20 +63,37 @@ shared_ptr<AsyncSocketConnection> AsyncSocketListener::accept() {
     return make_shared<AsyncSocketConnection>(client_sock, client_addr.sin_addr);
 }
 
-
 int AsyncSocketListener::get_fd() {
     return sock;
 }
 
-short AsyncSocketListener::get_events() {
-    return POLLIN;
-}
 
-bool AsyncSocketListener::done() {
-    return false;
-}
+class AsyncSocketListenerPollable : public Pollable {
+    shared_ptr<AsyncSocketListener> listener;
+    Callback<shared_ptr<AsyncSocketConnection>>::F callback;
 
-std::shared_ptr<Pollable> AsyncSocketListener::notify(short) {
-    return handle_socket_connection(accept());
+public:
+    AsyncSocketListenerPollable(shared_ptr<AsyncSocketListener> listener, Callback<shared_ptr<AsyncSocketConnection>>::F callback)
+            : listener(listener), callback(callback) {}
+
+    virtual int get_fd() {
+        return listener->get_fd();
+    }
+
+    virtual short get_events() {
+        return POLLIN;
+    }
+
+    virtual bool done() {
+        return false;
+    }
+
+    virtual std::shared_ptr<Pollable> notify(short) {
+        return callback(listener->accept());
+    }
+};
+
+shared_ptr<Pollable> make_pollable(shared_ptr<AsyncSocketListener> listener, Callback<shared_ptr<AsyncSocketConnection>>::F callback) {
+    return make_shared<AsyncSocketListenerPollable>(listener, callback);
 }
 

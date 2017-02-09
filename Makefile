@@ -4,10 +4,12 @@ CFLAGS = -std=c++0x -ggdb -Wall -Wextra -pedantic -Werror
 CXXFLAGS = $(CFLAGS)
 DEPS = httpd.h connection.h util.h http.h server.h mocks.h listener.h request_handlers.h file_repository.h \
        connection_handlers.h synchronized_queue.h htaccess.h dns_client.h request_filters.h \
-       async_connection.h async_event_loop.h async_listener.h async_connection_handler.h
+       async_connection.h async_event_loop.h async_listener.h async_connection_handler.h \
+       async_http_connection.h async_http_server.h
 SRCS = httpd.cpp connection.cpp util.cpp http.cpp server.cpp mocks.cpp listener.cpp request_handlers.cpp \
        file_repository.cpp connection_handlers.cpp htaccess.cpp dns_client.cpp request_filters.cpp \
-       async_connection.cpp async_event_loop.cpp async_listener.cpp async_connection_handler.cpp
+       async_connection.cpp async_event_loop.cpp async_listener.cpp async_connection_handler.cpp \
+       async_http_connection.cpp async_http_server.cpp
 
 OBJ_DIR = build
 

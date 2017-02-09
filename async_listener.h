@@ -6,7 +6,7 @@
 #include "async_event_loop.h"
 
 
-class AsyncSocketListener : public Pollable {
+class AsyncSocketListener {
     int sock;
 
 public:
@@ -17,11 +17,10 @@ public:
     void listen();
     std::shared_ptr<AsyncSocketConnection> accept();
 
-    virtual int get_fd();
-    virtual short get_events();
-    virtual bool done();
-    virtual std::shared_ptr<Pollable> notify(short revents);
+    int get_fd();
 };
+
+std::shared_ptr<Pollable> make_pollable(std::shared_ptr<AsyncSocketListener> listener, Callback<std::shared_ptr<AsyncSocketConnection>>::F conn);
 
 
 #endif //ASYNC_LISTENER_H_H

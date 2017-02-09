@@ -1,6 +1,7 @@
 #ifndef ASYNC_EVENT_LOOP_H
 #define ASYNC_EVENT_LOOP_H
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -30,6 +31,12 @@ public:
 template<class ...Args>
 struct Callback {
     typedef std::function<std::shared_ptr<Pollable> (Args...)> F;
+
+    static F empty() {
+        return [](Args...) -> std::shared_ptr<Pollable> {
+            return std::shared_ptr<Pollable>();
+        };
+    }
 };
 
 

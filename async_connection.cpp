@@ -8,8 +8,10 @@
 
 using std::cerr;
 using std::endl;
+using std::ios;
 using std::make_shared;
 using std::shared_ptr;
+using std::stringstream;
 using std::string;
 
 #define INVALID_SOCK (-1)
@@ -132,10 +134,53 @@ public:
 AsyncSocketConnection::AsyncSocketConnection(int client_sock, struct in_addr client_remote_ip)
         : conn(make_shared<ConnectionHandle>(client_sock, client_remote_ip)) {}
 
+struct in_addr AsyncSocketConnection::get_remote_ip() {
+    return conn->get_remote_ip();
+}
+
 std::shared_ptr<Pollable> AsyncSocketConnection::read(Callback<string>::F callback) {
     return make_shared<SocketReadPollable>(conn, callback);
 }
 
 std::shared_ptr<Pollable> AsyncSocketConnection::write(string msg, Callback<>::F callback) {
     return make_shared<SocketWritePollable>(conn, msg, callback);
+}
+
+
+AsyncBufferedConnection::AsyncBufferedConnection(std::shared_ptr<AsyncSocketConnection> conn)
+        : conn(conn), buffer(make_shared<stringstream>()) {}
+
+Callback<string>::F make_read_into_buffer(shared_ptr<AsyncSocketConnection> conn, shared_ptr<stringstream> buffer, string sep, Callback<string>::F callback) {
+    return [=](string buf_str) -> shared_ptr<Pollable> {
+        buffer->seekp(0, ios::end);
+        (*buffer) << buf_str;
+
+        // TODO: maybe optimize this?
+        size_t split_pos = buffer->str().find(sep, 0);
+        if (split_pos != string::npos) {
+            string content = pop_n_sstream(*buffer, split_pos, sep.size());
+            return callback(content);
+        } else {
+            return conn->read(make_read_into_buffer(conn, buffer, sep, callback));
+        }
+    };
+}
+
+std::shared_ptr<Pollable> AsyncBufferedConnection::read_until(std::string sep, Callback<std::string>::F callback) {
+    // first try to read from the buffer by checking for the separator
+    size_t pos = buffer->str().find(sep, 0);
+    if (pos != string::npos) {
+        string content = pop_n_sstream(*buffer, pos, sep.size());
+        return callback(content);
+    }
+
+    return conn->read(make_read_into_buffer(conn, buffer, sep, callback));
+}
+
+std::shared_ptr<Pollable> AsyncBufferedConnection::write(std::string s, Callback<>::F callback) {
+    return conn->write(s, callback);
+}
+
+struct in_addr AsyncBufferedConnection::get_remote_ip() {
+    return conn->get_remote_ip();
 }
