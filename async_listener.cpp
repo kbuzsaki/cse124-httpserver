@@ -12,6 +12,7 @@
 
 using std::make_shared;
 using std::shared_ptr;
+using std::chrono::system_clock;
 
 #define INVALID_SOCK (-1)
 #define QUEUE_SIZE (100)
@@ -90,6 +91,10 @@ public:
     }
 
     virtual bool is_done() {
+        return false;
+    }
+
+    virtual bool past_deadline(system_clock::time_point) {
         return false;
     }
 

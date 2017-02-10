@@ -16,12 +16,15 @@ using std::stringstream;
 
 #define BUFSIZE (1024 * 1024)
 
+const std::chrono::seconds DEFAULT_TIMEOUT = std::chrono::seconds(10);
+
 
 class FileReadPollable : public Pollable {
     int fd;
     Callback<string>::F callback;
     stringstream buffer;
     bool done;
+    system_clock::time_point start;
 
     bool try_read() {
         char buf[BUFSIZE];
@@ -44,7 +47,7 @@ class FileReadPollable : public Pollable {
     }
 
 public:
-    FileReadPollable(string filename, Callback<string>::F callback) : callback(callback) {
+    FileReadPollable(string filename, Callback<string>::F callback) : callback(callback), done(false), start(system_clock::now()) {
         fd = open(filename.c_str(), O_NONBLOCK);
 
         int ret = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
@@ -67,6 +70,10 @@ public:
 
     virtual bool is_done() {
         return done;
+    }
+
+    virtual bool past_deadline(system_clock::time_point now) {
+        return (now - start) > DEFAULT_TIMEOUT;
     }
 
     virtual shared_ptr<Pollable> notify(short) {

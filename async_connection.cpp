@@ -14,22 +14,41 @@ using std::make_shared;
 using std::shared_ptr;
 using std::stringstream;
 using std::string;
+using std::chrono::system_clock;
+using std::chrono::duration;
 
 #define INVALID_SOCK (-1)
 #define BUFSIZE (1024 * 1024)
 
 // TODO: clean up this bit of the code, make it actually non-blocking
 
+const std::chrono::seconds DEFAULT_TIMEOUT = std::chrono::seconds(5);
+
+
+AutoClosingSocket::AutoClosingSocket(int sock) : client_sock(sock) {}
+
+AutoClosingSocket::~AutoClosingSocket() {
+    // ignore ENOTCONN in case the client closes before us
+    if (::shutdown(this->client_sock, SHUT_RDWR) < 0  && errno != ENOTCONN) {
+        cerr << errno_message("shutdown() failed: ") << endl;
+    }
+    if (::close(this->client_sock) < 0) {
+        cerr << errno_message("close() failed: ") << endl;
+    }
+    this->client_sock = INVALID_SOCK;
+}
+
 
 class SocketReadPollable : public Pollable {
-    int sock;
+    shared_ptr<AutoClosingSocket> conn;
     Callback<string>::F callback;
     bool done;
+    system_clock::time_point start;
 
     string try_read() {
         char buf[BUFSIZE];
 
-        ssize_t received = ::recv(sock, buf, sizeof(buf), 0);
+        ssize_t received = ::recv(conn->client_sock, buf, sizeof(buf), 0);
         if (received < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
             return "";
         } else if (received < 0) {
@@ -43,10 +62,11 @@ class SocketReadPollable : public Pollable {
     }
 
 public:
-    SocketReadPollable(int sock, Callback<string>::F callback) : sock(sock), callback(callback), done(false) {}
+    SocketReadPollable(shared_ptr<AutoClosingSocket> conn, Callback<string>::F callback)
+            : conn(conn), callback(callback), done(false), start(system_clock::now()) {}
 
     virtual int get_fd() {
-        return sock;
+        return conn->client_sock;
     }
 
     virtual short get_events() {
@@ -57,34 +77,45 @@ public:
         return done;
     }
 
+    virtual bool past_deadline(system_clock::time_point now) {
+        return (now - start) > DEFAULT_TIMEOUT;
+    }
+
     virtual std::shared_ptr<Pollable> notify(short) {
-        string s = try_read();
-        if (s != "") {
+        try {
+            string s = try_read();
+            if (s != "") {
+                done = true;
+            }
+            return callback(s);
+        } catch (ConnectionClosed&) {
+            // give up
             done = true;
+            return shared_ptr<Pollable>();
         }
-        return callback(s);
     }
 };
 
 
 class SocketWritePollable : public Pollable {
-    int sock;
+    shared_ptr<AutoClosingSocket> conn;
     Callback<>::F callback;
     bool done;
     string message;
     size_t total_sent;
+    system_clock::time_point start;
 
     bool try_write() {
         do {
             size_t left = message.size() - total_sent;
             size_t send_amount = std::min(left, (size_t)BUFSIZE);
-            ssize_t sent = send(sock, message.c_str() + total_sent, send_amount, 0);
+            ssize_t sent = send(conn->client_sock, message.c_str() + total_sent, send_amount, 0);
 
-            if (sent < 0 && (errno == EAGAIN || EWOULDBLOCK)) {
+            if (sent < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
                 return false;
             } else if (sent < 0) {
                 std::cerr << errno_message("send() failed: ") << std::endl;
-                return false;
+                return true;
             }
 
             total_sent += sent;
@@ -94,10 +125,11 @@ class SocketWritePollable : public Pollable {
     }
 
 public:
-    SocketWritePollable(int sock, string message, Callback<>::F callback) : sock(sock), callback(callback), done(false), message(message), total_sent(0) {}
+    SocketWritePollable(shared_ptr<AutoClosingSocket> conn, string message, Callback<>::F callback)
+            : conn(conn), callback(callback), done(false), message(message), total_sent(0), start(system_clock::now()) {}
 
     virtual int get_fd() {
-        return sock;
+        return conn->client_sock;
     }
 
     virtual short get_events() {
@@ -106,6 +138,10 @@ public:
 
     virtual bool is_done() {
         return done;
+    }
+
+    virtual bool past_deadline(system_clock::time_point now) {
+        return (now - start) > DEFAULT_TIMEOUT;
     }
 
     virtual shared_ptr<Pollable> notify(short) {
@@ -120,33 +156,23 @@ public:
 
 
 AsyncSocketConnection::AsyncSocketConnection(int client_sock, struct in_addr client_remote_ip)
-        : client_sock(client_sock), client_remote_ip(client_remote_ip) {}
+        : conn(make_shared<AutoClosingSocket>(client_sock)), client_remote_ip(client_remote_ip) {}
 
 struct in_addr AsyncSocketConnection::get_remote_ip() {
     return client_remote_ip;
 }
 
 std::shared_ptr<Pollable> AsyncSocketConnection::read(Callback<string>::F callback) {
-    return make_shared<SocketReadPollable>(client_sock, callback);
+    return make_shared<SocketReadPollable>(conn, callback);
 }
 
 std::shared_ptr<Pollable> AsyncSocketConnection::write(string msg, Callback<>::F callback) {
-    return make_shared<SocketWritePollable>(client_sock, msg, callback);
+    return make_shared<SocketWritePollable>(conn, msg, callback);
 }
 
-AsyncSocketConnection::AsyncSocketConnection(AsyncSocketConnection&& conn) : client_sock(conn.client_sock), client_remote_ip(conn.client_remote_ip) {
-    conn.client_sock = INVALID_SOCK;
-}
-
-AsyncSocketConnection::~AsyncSocketConnection() {
-    // ignore ENOTCONN in case the client closes before us
-    if (::shutdown(this->client_sock, SHUT_RDWR) < 0  && errno != ENOTCONN) {
-        cerr << errno_message("shutdown() failed: ") << endl;
-    }
-    if (::close(this->client_sock) < 0) {
-        cerr << errno_message("close() failed: ") << endl;
-    }
-    this->client_sock = INVALID_SOCK;
+AsyncSocketConnection::AsyncSocketConnection(AsyncSocketConnection&& other)
+        : conn(make_shared<AutoClosingSocket>(other.conn->client_sock)), client_remote_ip(other.client_remote_ip) {
+    other.conn->client_sock = INVALID_SOCK;
 }
 
 
@@ -187,3 +213,4 @@ std::shared_ptr<Pollable> AsyncBufferedConnection::write(std::string s, Callback
 struct in_addr AsyncBufferedConnection::get_remote_ip() {
     return conn->get_remote_ip();
 }
+

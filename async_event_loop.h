@@ -1,6 +1,7 @@
 #ifndef ASYNC_EVENT_LOOP_H
 #define ASYNC_EVENT_LOOP_H
 
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -15,6 +16,8 @@ public:
     virtual short get_events() = 0;
 
     virtual bool is_done() = 0;
+
+    virtual bool past_deadline(std::chrono::system_clock::time_point) = 0;
 
     // TODO: add a timeout
 

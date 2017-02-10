@@ -3,18 +3,24 @@
 
 #include <functional>
 #include <netinet/in.h>
+#include <memory>
 #include <sstream>
 #include "async_event_loop.h"
 
+struct AutoClosingSocket {
+    int client_sock;
+
+    AutoClosingSocket(int sock);
+    ~AutoClosingSocket();
+};
 
 class AsyncSocketConnection {
-    int client_sock;
+    std::shared_ptr<AutoClosingSocket> conn;
     struct in_addr client_remote_ip;
 
 public:
     AsyncSocketConnection(int client_sock, struct in_addr client_remote_ip);
     AsyncSocketConnection(AsyncSocketConnection&&);
-    ~AsyncSocketConnection();
 
     struct in_addr get_remote_ip();
 
