@@ -1,7 +1,7 @@
 #include <iostream>
 #include "async_listener.h"
 #include "async_http_server.h"
-#include "async_connection_handler.h"
+#include "async_request_handlers.h"
 
 using namespace std;
 
@@ -16,7 +16,8 @@ int main(int argc, char** argv) {
 
     shared_ptr<AsyncSocketListener> listener = make_shared<AsyncSocketListener>(port);
 
-    AsyncHttpServer server(listener, make_shared<TestAsyncHttpRequestHandler>());
+    shared_ptr<AsyncFileRepository> repository = make_shared<DirectoryAsyncFileRepository>(doc_root);
+    AsyncHttpServer server(listener, make_shared<FileServingAsyncHttpRequestHandler>(repository));
 
     server.serve();
 

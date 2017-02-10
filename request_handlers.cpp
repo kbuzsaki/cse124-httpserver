@@ -7,6 +7,19 @@ using std::vector;
 
 string infer_content_type(string);
 
+// TODO: add tests for this, maybe move it somewhere else
+string infer_content_type(string filename) {
+    if (ends_with(filename, ".html")) {
+        return "text/html";
+    } else if (ends_with(filename, ".jpg")) {
+        return "image/jpeg";
+    } else if (ends_with(filename, ".png")) {
+        return "image/png";
+    }
+    return "text/plain";
+}
+
+
 FileServingHttpHandler::FileServingHttpHandler(shared_ptr<FileRepository> repository) : repository(repository) {}
 
 HttpResponse FileServingHttpHandler::handle_request(const HttpRequest &request) {
@@ -30,18 +43,6 @@ HttpResponse FileServingHttpHandler::handle_request(const HttpRequest &request) 
 
     HttpResponse response = ok_response(file->contents(), infer_content_type(path), file->last_modified());
     return response;
-}
-
-// TODO: add tests for this, maybe move it somewhere else
-string infer_content_type(string filename) {
-    if (ends_with(filename, ".html")) {
-        return "text/html";
-    } else if (ends_with(filename, ".jpg")) {
-        return "image/jpeg";
-    } else if (ends_with(filename, ".png")) {
-        return "image/png";
-    }
-    return "text/plain";
 }
 
 

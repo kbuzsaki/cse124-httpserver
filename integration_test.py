@@ -176,6 +176,11 @@ class HttpServerTest(unittest.TestCase):
 
     def test_malformed_request_line(self):
         # TODO: test more permutations of this?
+        """ TODO:
+            varieties of bad header
+            bad HTTP version
+            bad method?
+        """
 
         resp = self.make_raw_request("GET /cat.png\r\n\r\n")
         self.assert_response(resp, STATUS_BAD_REQUEST, self.default_headers, b"")

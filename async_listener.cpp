@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <poll.h>
 #include "async_listener.h"
-#include "async_connection_handler.h"
 #include "listener.h"
 #include "util.h"
 
