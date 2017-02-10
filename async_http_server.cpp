@@ -25,9 +25,17 @@ void AsyncHttpServer::serve() {
 
 
 shared_ptr<Pollable> handle_http_connection(shared_ptr<AsyncHttpConnection> http_conn, shared_ptr<AsyncHttpRequestHandler> handler) {
-    return http_conn->read_request([http_conn, handler](HttpRequest request) -> shared_ptr<Pollable> {
-        return handler->handle_request(request, [http_conn, handler](HttpResponse response) -> shared_ptr<Pollable> {
-            return http_conn->write_response(response, [http_conn, handler]() -> shared_ptr<Pollable> {
+    return http_conn->read_request([=](HttpRequest request) -> shared_ptr<Pollable> {
+        if (!has_header(request.headers, "Host")) {
+            return http_conn->write_response(bad_request_response(), Callback<>::empty());
+        }
+
+        return handler->handle_request(request, [=](HttpResponse response) -> shared_ptr<Pollable> {
+            return http_conn->write_response(response, [=]() -> shared_ptr<Pollable> {
+                if (get_header(request.headers, "Connection").value == "close") {
+                    return shared_ptr<Pollable>();
+                }
+
                 return handle_http_connection(http_conn, handler);
             });
         });
