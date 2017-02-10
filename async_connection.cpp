@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <poll.h>
 #include <unistd.h>
@@ -15,75 +16,37 @@ using std::stringstream;
 using std::string;
 
 #define INVALID_SOCK (-1)
-#define BUFFER_SIZE (2000)
+#define BUFSIZE (1024 * 1024)
 
-
-ConnectionHandle::ConnectionHandle(int client_sock, struct in_addr client_remote_ip)
-        : client_sock(client_sock), client_remote_ip(client_remote_ip) {}
-
-ConnectionHandle::~ConnectionHandle() {
-    this->close();
-}
-
-int ConnectionHandle::get_fd() {
-    return client_sock;
-}
-
-struct in_addr ConnectionHandle::get_remote_ip() {
-    return client_remote_ip;
-}
-
-void ConnectionHandle::close() {
-    // ignore ENOTCONN in case the client closes before us
-    if (::shutdown(this->client_sock, SHUT_RDWR) < 0  && errno != ENOTCONN) {
-        cerr << errno_message("shutdown() failed: ") << endl;
-    }
-    if (::close(this->client_sock) < 0) {
-        cerr << errno_message("close() failed: ") << endl;
-    }
-    this->client_sock = INVALID_SOCK;
-}
-
-std::string ConnectionHandle::inner_read() {
-    char buf[BUFFER_SIZE];
-
-    ssize_t received = ::recv(client_sock, buf, sizeof(buf), 0);
-    if (received < 0) {
-        if (errno == EAGAIN) {
-            // TODO: add test for this timeout?
-            throw ConnectionClosed();
-        } else {
-            throw ConnectionError(errno_message("recv() failed: "));
-        }
-    } else if (received == 0) {
-        throw ConnectionClosed();
-    }
-
-    buf[received] = '\0';
-    return string(buf);
-}
-
-// TODO: handle writes larger than the buffer size?
-void ConnectionHandle::inner_write(std::string s) {
-    ssize_t sent = ::send(this->client_sock, s.c_str(), s.size(), 0);
-    if (sent < 0) {
-        throw ConnectionError(errno_message("send() failed: "));
-    } else if ((size_t) sent != s.size()) {
-        std::cerr << "WARNING: send() sent fewer bytes than expected!" << std::endl;
-    }
-}
+// TODO: clean up this bit of the code, make it actually non-blocking
 
 
 class SocketReadPollable : public Pollable {
-    shared_ptr<ConnectionHandle> conn;
+    int sock;
     Callback<string>::F callback;
     bool done;
 
+    string try_read() {
+        char buf[BUFSIZE];
+
+        ssize_t received = ::recv(sock, buf, sizeof(buf), 0);
+        if (received < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            return "";
+        } else if (received < 0) {
+            throw ConnectionError(errno_message("recv() failed: "));
+        } else if (received == 0) {
+            throw ConnectionClosed();
+        }
+
+        buf[received] = '\0';
+        return string(buf, (size_t)received);
+    }
+
 public:
-    SocketReadPollable(shared_ptr<ConnectionHandle> conn, Callback<string>::F callback) : conn(conn), callback(callback), done(false) {}
+    SocketReadPollable(int sock, Callback<string>::F callback) : sock(sock), callback(callback), done(false) {}
 
     virtual int get_fd() {
-        return conn->get_fd();
+        return sock;
     }
 
     virtual short get_events() {
@@ -95,24 +58,46 @@ public:
     }
 
     virtual std::shared_ptr<Pollable> notify(short) {
-        done = true;
-        return callback(conn->inner_read());
+        string s = try_read();
+        if (s != "") {
+            done = true;
+        }
+        return callback(s);
     }
 };
 
 
 class SocketWritePollable : public Pollable {
-    shared_ptr<ConnectionHandle> conn;
-    string message;
+    int sock;
     Callback<>::F callback;
     bool done;
+    string message;
+    size_t total_sent;
+
+    bool try_write() {
+        do {
+            size_t left = message.size() - total_sent;
+            size_t send_amount = std::min(left, (size_t)BUFSIZE);
+            ssize_t sent = send(sock, message.c_str() + total_sent, send_amount, 0);
+
+            if (sent < 0 && (errno == EAGAIN || EWOULDBLOCK)) {
+                return false;
+            } else if (sent < 0) {
+                std::cerr << errno_message("send() failed: ") << std::endl;
+                return false;
+            }
+
+            total_sent += sent;
+        } while (total_sent < message.size());
+
+        return true;
+    }
 
 public:
-    SocketWritePollable(shared_ptr<ConnectionHandle> conn, string message, Callback<>::F callback)
-            : conn(conn), message(message), callback(callback), done(false) {}
+    SocketWritePollable(int sock, string message, Callback<>::F callback) : sock(sock), callback(callback), done(false), message(message), total_sent(0) {}
 
     virtual int get_fd() {
-        return conn->get_fd();
+        return sock;
     }
 
     virtual short get_events() {
@@ -123,27 +108,45 @@ public:
         return done;
     }
 
-    virtual std::shared_ptr<Pollable> notify(short) {
-        done = true;
-        conn->inner_write(message);
-        return callback();
+    virtual shared_ptr<Pollable> notify(short) {
+        done = try_write();
+        if (done) {
+            return callback();
+        } else {
+            return shared_ptr<Pollable>();
+        }
     }
 };
 
 
 AsyncSocketConnection::AsyncSocketConnection(int client_sock, struct in_addr client_remote_ip)
-        : conn(make_shared<ConnectionHandle>(client_sock, client_remote_ip)) {}
+        : client_sock(client_sock), client_remote_ip(client_remote_ip) {}
 
 struct in_addr AsyncSocketConnection::get_remote_ip() {
-    return conn->get_remote_ip();
+    return client_remote_ip;
 }
 
 std::shared_ptr<Pollable> AsyncSocketConnection::read(Callback<string>::F callback) {
-    return make_shared<SocketReadPollable>(conn, callback);
+    return make_shared<SocketReadPollable>(client_sock, callback);
 }
 
 std::shared_ptr<Pollable> AsyncSocketConnection::write(string msg, Callback<>::F callback) {
-    return make_shared<SocketWritePollable>(conn, msg, callback);
+    return make_shared<SocketWritePollable>(client_sock, msg, callback);
+}
+
+AsyncSocketConnection::AsyncSocketConnection(AsyncSocketConnection&& conn) : client_sock(conn.client_sock), client_remote_ip(conn.client_remote_ip) {
+    conn.client_sock = INVALID_SOCK;
+}
+
+AsyncSocketConnection::~AsyncSocketConnection() {
+    // ignore ENOTCONN in case the client closes before us
+    if (::shutdown(this->client_sock, SHUT_RDWR) < 0  && errno != ENOTCONN) {
+        cerr << errno_message("shutdown() failed: ") << endl;
+    }
+    if (::close(this->client_sock) < 0) {
+        cerr << errno_message("close() failed: ") << endl;
+    }
+    this->client_sock = INVALID_SOCK;
 }
 
 

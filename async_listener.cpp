@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <sstream>
 #include <strings.h>
@@ -57,6 +58,11 @@ shared_ptr<AsyncSocketConnection> AsyncSocketListener::accept() {
     int client_sock = ::accept(sock, (struct sockaddr*) &client_addr, &client_len);
     if (client_sock < 0) {
         throw ListenerError(errno_message("accept() failed: "));
+    }
+
+    int ret = fcntl(client_sock, F_SETFL, fcntl(client_sock, F_GETFL, 0) | O_NONBLOCK);
+    if (ret < 0) {
+        std::cerr << "unable to set client sock to non blocking!" << std::endl;
     }
 
     return make_shared<AsyncSocketConnection>(client_sock, client_addr.sin_addr);

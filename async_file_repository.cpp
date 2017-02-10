@@ -14,7 +14,7 @@ using std::shared_ptr;
 using std::string;
 using std::stringstream;
 
-#define BUFSIZE (4096)
+#define BUFSIZE (1024 * 1024)
 
 
 class FileReadPollable : public Pollable {
@@ -32,13 +32,13 @@ class FileReadPollable : public Pollable {
             if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
                 return false;
             } else if (ret == -1) {
-                std::cerr << errno_message("read() failed: ") << std::endl;
                 return false;
             } else if (ret == 0) {
                 return true;
             } else {
                 buf[ret] = '\0';
                 buffer << string(buf, (size_t)ret);
+                return false;
             }
         }
     }
@@ -46,6 +46,11 @@ class FileReadPollable : public Pollable {
 public:
     FileReadPollable(string filename, Callback<string>::F callback) : callback(callback) {
         fd = open(filename.c_str(), O_NONBLOCK);
+
+        int ret = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
+        if (ret < 0) {
+            std::cerr << "unable to set fd to non blocking!" << std::endl;
+        }
     }
 
     ~FileReadPollable() {
