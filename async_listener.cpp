@@ -50,7 +50,6 @@ void AsyncSocketListener::listen() {
 }
 
 shared_ptr<AsyncSocketConnection> AsyncSocketListener::accept() {
-    std::cerr << "called async accept! " << std::endl;
     struct sockaddr_in client_addr;
     unsigned int client_len = sizeof(client_addr);
 
