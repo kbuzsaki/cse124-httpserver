@@ -38,7 +38,7 @@ class FileReadPollable : public Pollable {
                 return true;
             } else {
                 buf[ret] = '\0';
-                buffer << string(buf);
+                buffer << string(buf, (size_t)ret);
             }
         }
     }
