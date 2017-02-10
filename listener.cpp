@@ -11,7 +11,7 @@ using std::shared_ptr;
 using std::stringstream;
 
 #define INVALID_SOCK (-1)
-#define QUEUE_SIZE (100)
+#define QUEUE_SIZE (2000)
 
 ListenerError::ListenerError(std::string message) : runtime_error(message) {}
 
