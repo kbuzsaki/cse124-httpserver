@@ -46,7 +46,7 @@ ThreadModel parse_thread_model(int argc, char** argv) {
         return NO_POOL;
     } else {
         if (argc >= 2) {
-            return ThreadModel(strtol(argv[2], NULL, 10));
+            return ThreadModel(strtol(argv[1], NULL, 10));
         } else {
             return ThreadModel(4);
         }
