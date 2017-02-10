@@ -63,11 +63,18 @@ void serve_sync(unsigned short port, string doc_root, ThreadModel thread_model) 
     server.serve();
 }
 
+shared_ptr<AsyncHttpRequestHandler> wrap_htaccess_middleware_async(shared_ptr<AsyncFileRepository> repository, shared_ptr<AsyncHttpRequestHandler> handler) {
+    shared_ptr<AsyncRequestFilter> htaccess_filter = make_shared<AsyncHtAccessRequestFilter>(repository);
+    return make_shared<AsyncRequestFilterMiddleware>(htaccess_filter, handler);
+}
+
 void serve_async(unsigned short port, string doc_root) {
     shared_ptr<AsyncFileRepository> repository = make_shared<DirectoryAsyncFileRepository>(doc_root);
     shared_ptr<AsyncHttpRequestHandler> file_serving_handler = make_shared<FileServingAsyncHttpRequestHandler>(repository);
 
-    AsyncHttpServer server(make_shared<AsyncSocketListener>(port), file_serving_handler);
+    shared_ptr<AsyncHttpRequestHandler> request_handler = wrap_htaccess_middleware_async(repository, file_serving_handler);
+
+    AsyncHttpServer server(make_shared<AsyncSocketListener>(port), request_handler);
     server.serve();
 }
 

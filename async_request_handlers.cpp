@@ -44,3 +44,17 @@ shared_ptr<Pollable> FileServingAsyncHttpRequestHandler::handle_request(HttpRequ
         });
     });
 }
+
+
+AsyncRequestFilterMiddleware::AsyncRequestFilterMiddleware(shared_ptr<AsyncRequestFilter> filter, shared_ptr<AsyncHttpRequestHandler> handler)
+        : filter(filter), handler(handler) {}
+
+shared_ptr<Pollable> AsyncRequestFilterMiddleware::handle_request(HttpRequest request, Callback<HttpResponse>::F callback) {
+    return filter->allow_request(request, [=](bool allowed) -> shared_ptr<Pollable> {
+        if (allowed) {
+            return handler->handle_request(request, callback);
+        } else {
+            return callback(forbidden_response());
+        }
+    });
+}
