@@ -6,6 +6,7 @@
 #include "server.h"
 #include "file_repository.h"
 #include "request_handlers.h"
+#include "async_request_handlers.h"
 
 using std::cerr;
 using std::cout;
@@ -43,9 +44,7 @@ shared_ptr<HttpRequestHandler> wrap_htaccess_middleware(shared_ptr<FileRepositor
     return make_shared<RequestFilterMiddleware>(htaccess_filter, handler);
 }
 
-void start_httpd(unsigned short port, string doc_root, ThreadModel thread_model) {
-    cerr << "Starting server (port: " << port << ", doc_root: " << doc_root << ")" << endl;
-
+void serve_sync(unsigned short port, string doc_root, ThreadModel thread_model) {
     shared_ptr<FileRepository> repository = make_shared<DirectoryFileRepository>(doc_root);
     shared_ptr<HttpRequestHandler> file_serving_handler = make_shared<FileServingHttpHandler>(repository);
 
@@ -62,4 +61,22 @@ void start_httpd(unsigned short port, string doc_root, ThreadModel thread_model)
 
     HttpServer server(HttpListener(make_shared<SocketListener>(port)), connection_handler);
     server.serve();
+}
+
+void serve_async(unsigned short port, string doc_root) {
+    shared_ptr<AsyncFileRepository> repository = make_shared<DirectoryAsyncFileRepository>(doc_root);
+    shared_ptr<AsyncHttpRequestHandler> file_serving_handler = make_shared<FileServingAsyncHttpRequestHandler>(repository);
+
+    AsyncHttpServer server(make_shared<AsyncSocketListener>(port), file_serving_handler);
+    server.serve();
+}
+
+void start_httpd(unsigned short port, string doc_root, ThreadModel thread_model) {
+    cerr << "Starting server (port: " << port << ", doc_root: " << doc_root << ")" << endl;
+
+    if (thread_model == ASYNC_EVENT_LOOP) {
+        serve_async(port, doc_root);
+    } else {
+        serve_sync(port, doc_root, thread_model);
+    }
 }

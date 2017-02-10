@@ -10,10 +10,10 @@
 using namespace std;
 
 const ThreadModel DEFAULT_THREAD_MODEL = NO_POOL;
-const vector<string> THREAD_MODELS = vector<string>{"nothread", "nopool", "pool"};
+const vector<string> THREAD_MODELS = vector<string>{"nothread", "nopool", "pool", "async"};
 
 void usage(char* argv0) {
-    cerr << "Usage: " << argv0 << " listen_port docroot_dir [nothread | nopool | pool size]" << endl;
+    cerr << "Usage: " << argv0 << " listen_port docroot_dir [nothread | nopool | pool size | async]" << endl;
 }
 
 uint16_t parse_port(char* port_str) {
@@ -44,6 +44,8 @@ ThreadModel parse_thread_model(int argc, char** argv) {
         return NO_THREADS;
     } else if (thread_model == "nopool") {
         return NO_POOL;
+    } else if (thread_model == "async") {
+        return ASYNC_EVENT_LOOP;
     } else {
         if (argc >= 2) {
             return ThreadModel(strtol(argv[1], NULL, 10));

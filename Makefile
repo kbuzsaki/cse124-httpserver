@@ -19,9 +19,6 @@ MAIN_OBJS = $(MAIN_SRCS:%.cpp=$(OBJ_DIR)/%.o)
 TEST_SRCS = test.cpp $(SRCS)
 TEST_OBJS = $(TEST_SRCS:%.cpp=$(OBJ_DIR)/%.o)
 
-ASYNC_SRCS = async_main.cpp $(SRCS)
-ASYNC_OBJS = $(ASYNC_SRCS:%.cpp=$(OBJ_DIR)/%.o)
-
 
 .PHONY: default run test dirs clean
 
@@ -45,12 +42,6 @@ itest: dirs httpd
 
 test: dirs test_httpd
 	./test_httpd
-
-async_httpd: $(ASYNC_OBJS)
-	$(CXX) $(CXXFLAGS) -o async_httpd $(ASYNC_OBJS) -lpthread
-
-async: async_httpd
-	./async_httpd 6060 files
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@

@@ -5,6 +5,7 @@
 
 typedef int ThreadModel;
 
+const ThreadModel ASYNC_EVENT_LOOP = -2;
 const ThreadModel NO_THREADS = -1;
 const ThreadModel NO_POOL = 0;
 
