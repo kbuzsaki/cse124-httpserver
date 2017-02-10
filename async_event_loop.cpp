@@ -23,25 +23,25 @@ pollfd pollfd_from_pollable(shared_ptr<Pollable> pollable) {
     };
 }
 
-vector<shared_ptr<Pollable>>::iterator AsyncEventLoop::process_pollable(vector<shared_ptr<Pollable>>::iterator iter, short revents) {
+int AsyncEventLoop::process_pollable(int index, short revents) {
     shared_ptr<Pollable> pollable;
     try {
-        pollable = (*iter)->notify(revents);
-        if ((*iter)->is_done()) {
-            iter = pollables.erase(iter);
+        pollable = pollables[index]->notify(revents);
+        if (pollables[index]->is_done()) {
+            pollables.erase(pollables.begin() + index);
         } else {
-            iter++;
+            index++;
         }
     } catch (...) {
         // the pollable errored, so just give up on it
-        iter = pollables.erase(iter);
+        pollables.erase(pollables.begin() + index);
     }
 
     if (pollable != NULL) {
         register_pollable(pollable);
     }
 
-    return iter;
+    return index;
 }
 
 void AsyncEventLoop::loop() {
@@ -49,9 +49,8 @@ void AsyncEventLoop::loop() {
         nfds_t pollables_size = (nfds_t) pollables.size();
         pollfd* pollfds = new pollfd[pollables_size];
 
-        size_t i = 0;
-        for (auto iter = pollables.begin(); iter != pollables.end() && i < pollables_size; i++, iter++) {
-            pollfds[i] = pollfd_from_pollable(*iter);
+        for (size_t i = 0; i < pollables_size; i++) {
+            pollfds[i] = pollfd_from_pollable(pollables[i]);
         }
 
         int ret = poll(pollfds, pollables_size, DEFAULT_TIMEOUT);
@@ -59,15 +58,15 @@ void AsyncEventLoop::loop() {
             throw runtime_error(errno_message("poll() failed: "));
         }
 
-        i = 0;
-        for (auto iter = pollables.begin(); i < pollables_size && iter != pollables.end(); i++) {
+        size_t j = 0;
+        for (size_t i = 0; i < pollables_size; i++) {
             short revents = pollfds[i].revents;
 
             if (revents != 0) {
-                iter = process_pollable(iter, revents);
+                j = process_pollable(j, revents);
             } else {
                 // TODO: check timeout
-                iter++;
+                j++;
             }
         }
 
