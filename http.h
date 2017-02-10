@@ -32,6 +32,7 @@ bool operator==(const HttpHeader&, const HttpHeader&);
 bool operator!=(const HttpHeader&, const HttpHeader&);
 
 bool has_header(const std::vector<HttpHeader>& headers, std::string key);
+HttpHeader get_header(const std::vector<HttpHeader>& headers, std::string key);
 
 
 struct HttpRequest {

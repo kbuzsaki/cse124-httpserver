@@ -58,6 +58,16 @@ bool has_header(const std::vector<HttpHeader>& headers, std::string key) {
     return false;
 }
 
+HttpHeader get_header(const std::vector<HttpHeader> &headers, std::string key) {
+    for (size_t i = 0; i < headers.size(); i++) {
+        if (headers[i].key == key) {
+            return headers[i];
+        }
+    }
+
+    return HttpHeader{"", ""};
+}
+
 
 HttpFrame HttpRequest::pack() {
     stringstream buf;

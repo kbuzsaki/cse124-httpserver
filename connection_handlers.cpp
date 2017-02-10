@@ -22,6 +22,10 @@ void handle_connection(shared_ptr<HttpRequestHandler> handler, HttpConnection&& 
                 HttpResponse response = handler->handle_request(request);
                 conn.write_response(response);
             }
+
+            if (get_header(request.headers, "Connection").value == "close") {
+                return;
+            }
         }
     } catch (HttpRequestParseError&) {
         conn.write_response(bad_request_response());
