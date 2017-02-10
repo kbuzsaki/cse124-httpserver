@@ -11,22 +11,9 @@ using std::vector;
 #define DEFAULT_TIMEOUT (10 * 1000)
 
 
-void AsyncEventLoop::prune() {
-    vector<shared_ptr<Pollable>> not_done;
-
-    for (size_t i = 0; i < pollables.size(); i++) {
-        if (!pollables[i]->is_done()) {
-            not_done.push_back(pollables[i]);
-        }
-    }
-
-    pollables = not_done;
-}
-
 void AsyncEventLoop::register_pollable(shared_ptr<Pollable> pollable) {
     pollables.push_back(pollable);
 }
-
 
 pollfd pollfd_from_pollable(shared_ptr<Pollable> pollable) {
     return pollfd{
@@ -36,12 +23,35 @@ pollfd pollfd_from_pollable(shared_ptr<Pollable> pollable) {
     };
 }
 
+vector<shared_ptr<Pollable>>::iterator AsyncEventLoop::process_pollable(vector<shared_ptr<Pollable>>::iterator iter, short revents) {
+    shared_ptr<Pollable> pollable;
+    try {
+        pollable = (*iter)->notify(revents);
+        if ((*iter)->is_done()) {
+            iter = pollables.erase(iter);
+        } else {
+            iter++;
+        }
+    } catch (...) {
+        // the pollable errored, so just give up on it
+        iter = pollables.erase(iter);
+    }
+
+    if (pollable != NULL) {
+        register_pollable(pollable);
+    }
+
+    return iter;
+}
+
 void AsyncEventLoop::loop() {
     while (!pollables.empty()) {
         nfds_t pollables_size = (nfds_t) pollables.size();
         pollfd* pollfds = new pollfd[pollables_size];
-        for (size_t i = 0; i < pollables_size; i++) {
-            pollfds[i] = pollfd_from_pollable(pollables[i]);
+
+        size_t i = 0;
+        for (auto iter = pollables.begin(); iter != pollables.end() && i < pollables_size; i++, iter++) {
+            pollfds[i] = pollfd_from_pollable(*iter);
         }
 
         int ret = poll(pollfds, pollables_size, DEFAULT_TIMEOUT);
@@ -49,28 +59,19 @@ void AsyncEventLoop::loop() {
             throw runtime_error(errno_message("poll() failed: "));
         }
 
-        // TODO: prune pollables?
-        for (size_t i = 0; i < pollables_size; i++) {
+        i = 0;
+        for (auto iter = pollables.begin(); i < pollables_size && iter != pollables.end(); i++) {
             short revents = pollfds[i].revents;
 
             if (revents != 0) {
-                std::cerr << "revents for fd " << pollfds[i].fd << ": " << std::hex << revents << std::endl;
-
-                try {
-                    shared_ptr<Pollable> pollable = pollables[i]->notify(revents);
-
-                    if (pollable != NULL) {
-                        register_pollable(pollable);
-                    }
-                } catch (...) {
-                }
+                iter = process_pollable(iter, revents);
+            } else {
+                // TODO: check timeout
+                iter++;
             }
         }
 
-
         // TODO: exception safety?
         delete[] pollfds;
-
-        prune();
     }
 }

@@ -43,7 +43,8 @@ struct Callback {
 class AsyncEventLoop {
     std::vector<std::shared_ptr<Pollable>> pollables;
 
-    void prune();
+    std::vector<std::shared_ptr<Pollable>>::iterator process_pollable(std::vector<std::shared_ptr<Pollable>>::iterator iter, short revents);
+
 public:
     void register_pollable(std::shared_ptr<Pollable> pollable);
     void loop();
