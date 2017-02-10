@@ -77,10 +77,10 @@ void ConnectionHandle::inner_write(std::string s) {
 class SocketReadPollable : public Pollable {
     shared_ptr<ConnectionHandle> conn;
     Callback<string>::F callback;
-    bool is_done;
+    bool done;
 
 public:
-    SocketReadPollable(shared_ptr<ConnectionHandle> conn, Callback<string>::F callback) : conn(conn), callback(callback), is_done(false) {}
+    SocketReadPollable(shared_ptr<ConnectionHandle> conn, Callback<string>::F callback) : conn(conn), callback(callback), done(false) {}
 
     virtual int get_fd() {
         return conn->get_fd();
@@ -90,12 +90,12 @@ public:
         return POLLIN;
     }
 
-    virtual bool done() {
-        return is_done;
+    virtual bool is_done() {
+        return done;
     }
 
     virtual std::shared_ptr<Pollable> notify(short) {
-        is_done = true;
+        done = true;
         return callback(conn->inner_read());
     }
 };
@@ -105,11 +105,11 @@ class SocketWritePollable : public Pollable {
     shared_ptr<ConnectionHandle> conn;
     string message;
     Callback<>::F callback;
-    bool is_done;
+    bool done;
 
 public:
     SocketWritePollable(shared_ptr<ConnectionHandle> conn, string message, Callback<>::F callback)
-            : conn(conn), message(message), callback(callback), is_done(false) {}
+            : conn(conn), message(message), callback(callback), done(false) {}
 
     virtual int get_fd() {
         return conn->get_fd();
@@ -119,12 +119,12 @@ public:
         return POLLOUT;
     }
 
-    virtual bool done() {
-        return is_done;
+    virtual bool is_done() {
+        return done;
     }
 
     virtual std::shared_ptr<Pollable> notify(short) {
-        is_done = true;
+        done = true;
         conn->inner_write(message);
         return callback();
     }

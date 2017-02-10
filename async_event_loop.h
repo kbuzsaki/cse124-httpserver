@@ -14,7 +14,7 @@ public:
     // get_events returns the events that poll() should check for
     virtual short get_events() = 0;
 
-    virtual bool done() = 0;
+    virtual bool is_done() = 0;
 
     // TODO: add a timeout
 

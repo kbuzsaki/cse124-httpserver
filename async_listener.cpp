@@ -83,7 +83,7 @@ public:
         return POLLIN;
     }
 
-    virtual bool done() {
+    virtual bool is_done() {
         return false;
     }
 

@@ -15,7 +15,7 @@ void AsyncEventLoop::prune() {
     vector<shared_ptr<Pollable>> not_done;
 
     for (size_t i = 0; i < pollables.size(); i++) {
-        if (!pollables[i]->done()) {
+        if (!pollables[i]->is_done()) {
             not_done.push_back(pollables[i]);
         }
     }
@@ -56,10 +56,13 @@ void AsyncEventLoop::loop() {
             if (revents != 0) {
                 std::cerr << "revents for fd " << pollfds[i].fd << ": " << std::hex << revents << std::endl;
 
-                shared_ptr<Pollable> pollable = pollables[i]->notify(revents);
+                try {
+                    shared_ptr<Pollable> pollable = pollables[i]->notify(revents);
 
-                if (pollable != NULL) {
-                    register_pollable(pollable);
+                    if (pollable != NULL) {
+                        register_pollable(pollable);
+                    }
+                } catch (...) {
                 }
             }
         }
