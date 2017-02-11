@@ -25,7 +25,7 @@ ConnectionClosed::ConnectionClosed() : runtime_error("connection closed") {}
 
 SocketConnection::SocketConnection(int client_sock, struct in_addr client_remote_ip) : client_sock(client_sock), client_remote_ip(client_remote_ip) {
     struct timeval tv;
-    tv.tv_sec = 10;
+    tv.tv_sec = 5;
     tv.tv_usec = 0;
 
     int err = setsockopt(this->client_sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));

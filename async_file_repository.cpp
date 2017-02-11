@@ -16,7 +16,7 @@ using std::stringstream;
 
 #define BUFSIZE (1024 * 1024)
 
-const std::chrono::seconds DEFAULT_TIMEOUT = std::chrono::seconds(10);
+const std::chrono::seconds DEFAULT_TIMEOUT = std::chrono::seconds(5);
 
 
 class FileReadPollable : public Pollable {
