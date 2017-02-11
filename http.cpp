@@ -227,6 +227,10 @@ HttpRequest parse_request_frame(const HttpFrame& frame) {
     if (uri == "" || uri[0] != '/') {
         throw HttpRequestParseError("Malformed uri: '" + uri + "'");
     }
+    // ensure that version string starts with the HTTP prefix and contains a multipart version number
+    if (version.substr(0, 5) != "HTTP/" || version.size() < string("HTTP/1.0").size()) {
+        throw HttpRequestParseError("Malformed http version: '" + version + "'");
+    }
 
     vector<HttpHeader> headers = parse_headers(header_lines);
 

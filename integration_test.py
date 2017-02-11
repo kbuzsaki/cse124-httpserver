@@ -183,10 +183,19 @@ class HttpServerTest(unittest.TestCase):
             bad method?
         """
 
+        resp = self.make_raw_request("GET HTTP/1.1\r\nHost: baz\r\n\r\n")
+        self.assert_response(resp, STATUS_BAD_REQUEST, self.default_headers, b"")
+
         resp = self.make_raw_request("GET foo HTTP/1.1\r\nHost: baz\r\n\r\n")
         self.assert_response(resp, STATUS_BAD_REQUEST, self.default_headers, b"")
 
         resp = self.make_raw_request("GET /cat.png\r\n\r\n")
+        self.assert_response(resp, STATUS_BAD_REQUEST, self.default_headers, b"")
+
+        resp = self.make_raw_request("GET /cat.png cat/1.1\r\n\r\n")
+        self.assert_response(resp, STATUS_BAD_REQUEST, self.default_headers, b"")
+
+        resp = self.make_raw_request("GET /cat.png HTTP/1\r\n\r\n")
         self.assert_response(resp, STATUS_BAD_REQUEST, self.default_headers, b"")
 
         resp = self.make_raw_request("GET /cat.png\r\nOtherHeader: foo\r\n\r\n")

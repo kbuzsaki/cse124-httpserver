@@ -397,6 +397,8 @@ void test_http_connection(TestRunner& runner) {
     runner.assert_throws<HttpRequestParseError>([&](){ bad_header_request_conn.read_request(); }, "bad header connection");
 
     runner.assert_throws<HttpRequestParseError>([](){ parse_request_frame(HttpFrame{"GET foo HTTP/1.1\r\nHost: baz\r\n\r\n"}); }, "uri without leading /");
+    runner.assert_throws<HttpRequestParseError>([](){ parse_request_frame(HttpFrame{"GET / cat/1.1\r\nHost: baz\r\n\r\n"}); }, "http version 'cat'");
+    runner.assert_throws<HttpRequestParseError>([](){ parse_request_frame(HttpFrame{"GET / HTTP/1\r\nHost: baz\r\n\r\n"}); }, "http version with incomplete number");
 }
 
 void test_http_listener(TestRunner& runner) {
