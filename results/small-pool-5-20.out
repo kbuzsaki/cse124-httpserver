@@ -1,0 +1,43 @@
+This is ApacheBench, Version 2.3 <$Revision: 655654 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking localhost (be patient)
+
+
+Server Software:        TritonHTTP/0.1
+Server Hostname:        localhost
+Server Port:            6063
+
+Document Path:          /foo.html
+Document Length:        37 bytes
+
+Concurrency Level:      20
+Time taken for tests:   1.154 seconds
+Complete requests:      1000
+Failed requests:        0
+Write errors:           0
+Total transferred:      171000 bytes
+HTML transferred:       37000 bytes
+Requests per second:    866.62 [#/sec] (mean)
+Time per request:       23.078 [ms] (mean)
+Time per request:       1.154 [ms] (mean, across all concurrent requests)
+Transfer rate:          144.72 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.1      0       1
+Processing:     3   23   3.8     22      38
+Waiting:        1   23   3.8     22      38
+Total:          3   23   3.8     22      38
+
+Percentage of the requests served within a certain time (ms)
+  50%     22
+  66%     23
+  75%     25
+  80%     25
+  90%     27
+  95%     29
+  98%     35
+  99%     38
+ 100%     38 (longest request)
