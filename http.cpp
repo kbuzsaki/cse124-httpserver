@@ -47,7 +47,6 @@ bool operator!=(const HttpHeader& lhs, const HttpHeader& rhs) {
     return !(lhs == rhs);
 }
 
-// TODO: test this
 bool has_header(const std::vector<HttpHeader>& headers, std::string key) {
     for (size_t i = 0; i < headers.size(); i++) {
         if (headers[i].key == key) {

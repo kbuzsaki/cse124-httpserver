@@ -17,7 +17,6 @@ using std::stringstream;
 #define INVALID_SOCK (-1)
 #define BUFFER_SIZE (2000)
 
-// TODO: add proper error handling via exceptions when connection stuff fails
 
 ConnectionError::ConnectionError(string message) : runtime_error(message) {}
 
@@ -48,8 +47,7 @@ string SocketConnection::read() {
 
     ssize_t received = ::recv(client_sock, buf, sizeof(buf), 0);
     if (received < 0) {
-        if (errno == EAGAIN) {
-            // TODO: add test for this timeout?
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
             throw ConnectionClosed();
         } else {
             throw ConnectionError(errno_message("recv() failed: "));
@@ -108,12 +106,10 @@ BufferedConnection::~BufferedConnection() {
 }
 
 bool BufferedConnection::is_closed() {
-    // TODO: is this acceptable behavior?
     return !conn || conn->is_closed();
 }
 
 void BufferedConnection::close() {
-    // TODO: is this acceptable behavior?
     if (!is_closed()) {
         conn->close();
     }
@@ -137,7 +133,6 @@ string BufferedConnection::read_until(string sep) {
         this->buffer.seekp(0, ios::end);
         this->buffer << buf_str;
 
-        // TODO: maybe optimize this?
         size_t split_pos = this->buffer.str().find(sep, 0);
         if (split_pos != string::npos) {
             return pop_n_sstream(this->buffer, split_pos, sep.size());

@@ -36,7 +36,6 @@ SocketListener::SocketListener(SocketListener&& listener) : sock(listener.sock) 
 }
 
 SocketListener::~SocketListener() {
-    // TODO: add a proper notion of "closed" to socket listener
     if (sock != INVALID_SOCK) {
         ::shutdown(this->sock, SHUT_RDWR);
         ::close(this->sock);

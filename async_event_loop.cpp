@@ -71,7 +71,6 @@ void AsyncEventLoop::loop() {
             }
         }
 
-        // TODO: exception safety?
         delete[] pollfds;
 
         vector<shared_ptr<Pollable>> new_pollables;

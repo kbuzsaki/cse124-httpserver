@@ -208,14 +208,11 @@ void test_mock_listener(TestRunner& runner) {
     };
     MockListener mock_listener(connections);
 
-    // TODO: test accept before listen?
     mock_listener.listen();
 
     runner.assert_equal(connections[0], mock_listener.accept(), "wrong first accepted conn");
     runner.assert_equal(connections[1], mock_listener.accept(), "wrong second accepted conn");
     runner.assert_equal(connections[2], mock_listener.accept(), "wrong third accepted conn");
-
-    // TODO: test listen after exhausted
 }
 
 void test_mock_handler(TestRunner& runner) {
@@ -248,7 +245,6 @@ void test_mock_file(TestRunner& runner) {
     runner.assert_equal(string(""), empty_file.contents(), "mock empty file had wrong contents");
     runner.assert_equal(system_clock::time_point(), empty_file.last_modified(), "mock empty file had wrong last modified");
 
-    // TODO: should a private file not have any contents?
     MockFile private_file(false, "some other stuff", system_clock::time_point());
     runner.assert_equal(false, private_file.world_readable(), "mock private file was not private");
     runner.assert_equal(string("some other stuff"), private_file.contents(), "mock private file had wrong contents");
@@ -349,7 +345,6 @@ void test_buffered_connection(TestRunner& runner) {
     }
 }
 
-// TODO: test failure cases
 void test_http_connection(TestRunner& runner) {
     shared_ptr<MockConnection> mock_conn = make_shared<MockConnection>("GET /foo/bar/baz?param HTTP/0.9\r\nHost: example.com\r\nMyHeader: my_value\r\n\r\n");
     HttpConnection request_conn(mock_conn);
@@ -371,7 +366,6 @@ void test_http_connection(TestRunner& runner) {
     runner.assert_equal(HttpRequest{"GET", "/bar.html", HTTP_VERSION_0_9, vector<HttpHeader>{{"Host", "baz"}}, "", {0}}, second_request, "second pipelined request");
     runner.assert_throws<ConnectionClosed>([&](){ pipelined_request_conn.read_request(); }, "third (empty) read from empty pipeline");
 
-    // TODO: test body with \r\n sequence
     HttpResponse response;
     response.version = HTTP_VERSION_1_1;
     response.status = OK_STATUS;
@@ -409,7 +403,6 @@ void test_http_listener(TestRunner& runner) {
     HttpResponse response{HTTP_VERSION_1_1, OK_STATUS, vector<HttpHeader>{HttpHeader{"KEY", "VAL"}}, ""};
     string response_str = response.pack().serialize();
 
-    // TODO: test failure before listen?
     http_listener.listen();
 
     // chunk in blocks to guard against mistakes due to similar variable names
@@ -431,8 +424,6 @@ void test_http_listener(TestRunner& runner) {
         runner.assert_equal(request_3, received_req_3, "wrong third received request");
         conn_3.write_response(response);
         runner.assert_equal(response_str, mock_connections[2]->written(), "wrong third response");
-    } {
-        // TODO: test accept when no more connections are remaining?
     }
 }
 

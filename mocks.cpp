@@ -20,7 +20,6 @@ MockConnection::MockConnection(string payload, int read_size, struct in_addr moc
 
 MockConnection::~MockConnection() {}
 
-// TODO: make closed make these fail
 std::string MockConnection::read() {
     char buf[BUFFER_SIZE];
 

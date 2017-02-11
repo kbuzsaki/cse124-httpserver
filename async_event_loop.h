@@ -19,8 +19,6 @@ public:
 
     virtual bool past_deadline(std::chrono::system_clock::time_point) = 0;
 
-    // TODO: add a timeout
-
     /**
      * notify is used to notify the Pollable that one of its events has occurred
      * @param revents  the events from poll() that occurred

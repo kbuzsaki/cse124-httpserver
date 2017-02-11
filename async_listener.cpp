@@ -38,7 +38,6 @@ AsyncSocketListener::AsyncSocketListener(AsyncSocketListener&& listener) : sock(
 }
 
 AsyncSocketListener::~AsyncSocketListener() {
-    // TODO: add a proper notion of "closed" to socket listener
     if (sock != INVALID_SOCK) {
         ::shutdown(this->sock, SHUT_RDWR);
         ::close(this->sock);

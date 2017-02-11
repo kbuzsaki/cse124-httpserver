@@ -20,8 +20,6 @@ using std::chrono::duration;
 #define INVALID_SOCK (-1)
 #define BUFSIZE (1024 * 1024)
 
-// TODO: clean up this bit of the code, make it actually non-blocking
-
 const std::chrono::seconds DEFAULT_TIMEOUT = std::chrono::seconds(5);
 
 
@@ -184,7 +182,6 @@ Callback<string>::F make_read_into_buffer(shared_ptr<AsyncSocketConnection> conn
         buffer->seekp(0, ios::end);
         (*buffer) << buf_str;
 
-        // TODO: maybe optimize this?
         size_t split_pos = buffer->str().find(sep, 0);
         if (split_pos != string::npos) {
             string content = pop_n_sstream(*buffer, split_pos, sep.size());

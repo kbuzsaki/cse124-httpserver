@@ -1,4 +1,5 @@
 #include "server.h"
+#include <iostream>
 
 using std::shared_ptr;
 
@@ -51,8 +52,7 @@ void HttpServer::serve() {
     while (true) {
         try {
             handler->handle_connection(listener.accept());
-        } catch (ListenerError&) {
-            // TODO: make this log somehow?
+        } catch (ListenerError& e) {
             return;
         }
     }
