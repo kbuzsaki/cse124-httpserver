@@ -130,6 +130,7 @@ class HttpServerTest(unittest.TestCase):
     def test_not_found(self):
         self.assert_not_found("foobar")
         self.assert_good_file("base_only", "text/plain")
+        self.assert_good_file("subdir/../base_only", "text/plain")
         self.assert_not_found("subdir/base_only")
         self.assert_not_found("subdir_only")
         self.assert_good_file("subdir/subdir_only", "text/plain")

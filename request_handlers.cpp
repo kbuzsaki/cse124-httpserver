@@ -23,7 +23,6 @@ string infer_content_type(string filename) {
 FileServingHttpHandler::FileServingHttpHandler(shared_ptr<FileRepository> repository) : repository(repository) {}
 
 HttpResponse FileServingHttpHandler::handle_request(const HttpRequest &request) {
-    // TODO: test this or move it into repository code
     string path = canonicalize_path(request.uri);
     if (path == "") {
         return not_found_response();
