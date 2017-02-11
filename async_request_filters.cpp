@@ -20,7 +20,7 @@ shared_ptr<Pollable> AsyncHtAccessRequestFilter::allow_request(HttpRequest reque
         return repository->read_file(htacces_path, [=](shared_ptr<AsyncFile> file) -> shared_ptr<Pollable> {
             if (file) {
                 return file->read_contents([=](string contents) -> shared_ptr<Pollable> {
-                    HtAccess htaccess = parse_htaccess_rules(contents, make_shared<NopDnsClient>());
+                    HtAccess htaccess = parse_htaccess_rules(contents, make_shared<NetworkDnsClient>());
 
                     return callback(htaccess.allows(request.remote_ip));
                 });
