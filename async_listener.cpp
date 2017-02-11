@@ -15,7 +15,7 @@ using std::shared_ptr;
 using std::chrono::system_clock;
 
 #define INVALID_SOCK (-1)
-#define QUEUE_SIZE (100)
+#define QUEUE_SIZE (2000)
 
 
 AsyncSocketListener::AsyncSocketListener(uint16_t port) {
