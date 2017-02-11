@@ -87,6 +87,8 @@ HttpResponse forbidden_response();
 HttpResponse not_found_response();
 HttpResponse internal_server_error_response();
 
+std::string infer_content_type(std::string filename);
+
 
 class HttpRequestParseError : public std::runtime_error {
 public:

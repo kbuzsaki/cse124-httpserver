@@ -178,6 +178,16 @@ void test_ends_with(TestRunner& runner) {
     runner.assert_equal(false, ends_with("bar.html.bak", "foo.bar.html.bak"), "bar.html.bak does not end with foo.bar.html.bak");
 }
 
+void test_infer_content_type(TestRunner& runner) {
+    runner.assert_equal(string("text/plain"), infer_content_type("foo"), "content type foo");
+    runner.assert_equal(string("text/html"), infer_content_type("foo.html"), "content type foo.html");
+    runner.assert_equal(string("image/png"), infer_content_type("foo.png"), "content type foo.png");
+    runner.assert_equal(string("image/jpeg"), infer_content_type("foo.jpg"), "content type foo.jpg");
+
+    runner.assert_equal(string("text/html"), infer_content_type("foo.png.html"), "content type foo.png.html");
+    runner.assert_equal(string("image/png"), infer_content_type("foo.html.png"), "content type foo.html.png");
+}
+
 void test_mock_connection(TestRunner& runner) {
     MockConnection empty_mock("");
     runner.assert_throws<ConnectionClosed>([&](){ empty_mock.read(); }, "read on empty mock");
@@ -614,6 +624,7 @@ int main() {
         test_canonicalize_path,
         test_to_http_date,
         test_ends_with,
+        test_infer_content_type,
         test_mock_connection,
         test_mock_listener,
         test_mock_handler,

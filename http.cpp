@@ -184,6 +184,17 @@ HttpResponse internal_server_error_response() {
     return error_response(INTERNAL_SERVER_ERROR_STATUS);
 }
 
+string infer_content_type(string filename) {
+    if (ends_with(filename, ".html")) {
+        return "text/html";
+    } else if (ends_with(filename, ".jpg")) {
+        return "image/jpeg";
+    } else if (ends_with(filename, ".png")) {
+        return "image/png";
+    }
+    return "text/plain";
+}
+
 
 HttpRequest parse_request_frame(const HttpFrame& frame) {
     vector<string> frame_lines = split(frame.contents, CRLF);

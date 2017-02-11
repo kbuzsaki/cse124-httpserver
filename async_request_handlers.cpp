@@ -6,8 +6,6 @@ using std::chrono::system_clock;
 using std::shared_ptr;
 using std::string;
 
-string infer_content_type(string);
-
 
 shared_ptr<Pollable> TestAsyncHttpRequestHandler::handle_request(HttpRequest, Callback<HttpResponse>::F callback) {
     return callback(forbidden_response());
