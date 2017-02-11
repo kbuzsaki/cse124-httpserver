@@ -57,6 +57,11 @@ string join(string joiner, vector<string> parts) {
     return buf.str();
 }
 
+std::string to_lowercase(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+    return s;
+}
+
 string pop_n_sstream(stringstream& buffer, size_t n, size_t discard) {
     string buf_str = buffer.str();
 

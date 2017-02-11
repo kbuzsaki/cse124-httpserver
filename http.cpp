@@ -48,8 +48,9 @@ bool operator!=(const HttpHeader& lhs, const HttpHeader& rhs) {
 }
 
 bool has_header(const std::vector<HttpHeader>& headers, std::string key) {
+    key = to_lowercase(key);
     for (size_t i = 0; i < headers.size(); i++) {
-        if (headers[i].key == key) {
+        if (to_lowercase(headers[i].key) == key) {
             return true;
         }
     }
@@ -58,8 +59,9 @@ bool has_header(const std::vector<HttpHeader>& headers, std::string key) {
 }
 
 HttpHeader get_header(const std::vector<HttpHeader> &headers, std::string key) {
+    key = to_lowercase(key);
     for (size_t i = 0; i < headers.size(); i++) {
-        if (headers[i].key == key) {
+        if (to_lowercase(headers[i].key) == key) {
             return headers[i];
         }
     }
