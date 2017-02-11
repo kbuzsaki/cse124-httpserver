@@ -90,7 +90,7 @@ public:
 PathAsyncFile::PathAsyncFile(string file_path) : file_path(file_path) {}
 
 shared_ptr<Pollable> PathAsyncFile::is_world_readable(Callback<bool>::F callback) {
-    // TODO: make this nonblocking?
+    // TODO: make this nonblocking? - no, confirmed with professor that blocking is ok here
     struct stat file_stat;
     ::stat(file_path.c_str(), &file_stat);
     return callback((file_stat.st_mode & S_IROTH));
@@ -101,7 +101,7 @@ shared_ptr<Pollable> PathAsyncFile::read_contents(Callback<string>::F callback) 
 }
 
 shared_ptr<Pollable> PathAsyncFile::read_last_modified(Callback<system_clock::time_point>::F callback) {
-    // TODO: make this nonblocking?
+    // TODO: make this nonblocking? - no, confirmed with professor that blocking is ok here
     struct stat file_stat;
     ::stat(file_path.c_str(), &file_stat);
     return callback(to_time_point(file_stat.st_mtime));
@@ -111,7 +111,7 @@ shared_ptr<Pollable> PathAsyncFile::read_last_modified(Callback<system_clock::ti
 DirectoryAsyncFileRepository::DirectoryAsyncFileRepository(string directory_path) : directory_path(directory_path) {}
 
 shared_ptr<Pollable> DirectoryAsyncFileRepository::read_file(string filename, Callback<shared_ptr<AsyncFile>>::F callback) {
-    // TODO: make this nonblocking?
+    // TODO: make this nonblocking? - no, confirmed with professor that blocking is ok here
     string file_path = directory_path + "/" + filename;
     if (access(file_path.c_str(), F_OK) < 0) {
         return callback(shared_ptr<PathAsyncFile>());
