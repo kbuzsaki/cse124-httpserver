@@ -23,7 +23,7 @@ void handle_connection(shared_ptr<HttpRequestHandler> handler, HttpConnection&& 
                 conn.write_response(response);
             }
 
-            if (get_header(request.headers, "Connection").value == "close") {
+            if (get_header(request.headers, "Connection").value.find("close") != std::string::npos) {
                 return;
             }
         }

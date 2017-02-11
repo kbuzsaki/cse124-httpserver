@@ -36,7 +36,7 @@ bool operator!=(const HttpFrame& lhs, const HttpFrame& rhs) {
 
 
 ostream& operator<<(ostream& os, const HttpHeader& header) {
-    return os << "'" << header.key << ": " << header.value << "'";
+    return os << "'" << header.key << ":" << header.value << "'";
 }
 
 bool operator==(const HttpHeader& lhs, const HttpHeader& rhs) {
@@ -76,7 +76,7 @@ HttpFrame HttpRequest::pack() {
     buf << this->method << " " << this->uri << " " << this->version << CRLF;
 
     for (size_t i = 0; i < this->headers.size(); i++) {
-        buf << this->headers[i].key << ": " << this->headers[i].value << CRLF;
+        buf << this->headers[i].key << ":" << this->headers[i].value << CRLF;
     }
 
     buf << CRLF;
@@ -245,7 +245,7 @@ vector<HttpHeader> parse_headers(const vector<string>& lines) {
     vector<HttpHeader> headers;
 
     for (size_t i = 0; i < lines.size(); i++) {
-        vector<string> parts = split_n(lines[i], ": ", NUM_HEADER_PARTS - 1);
+        vector<string> parts = split_n(lines[i], ":", NUM_HEADER_PARTS - 1);
         if (parts.size() != NUM_HEADER_PARTS) {
             stringstream error;
             error << "malformed http header '" << lines[i] << "' had " << parts.size() << " parts, expected " << NUM_HEADER_PARTS;

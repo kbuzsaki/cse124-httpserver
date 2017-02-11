@@ -32,7 +32,7 @@ shared_ptr<Pollable> handle_http_connection(shared_ptr<AsyncHttpConnection> http
 
         return handler->handle_request(request, [=](HttpResponse response) -> shared_ptr<Pollable> {
             return http_conn->write_response(response, [=]() -> shared_ptr<Pollable> {
-                if (get_header(request.headers, "Connection").value == "close") {
+                if (get_header(request.headers, "Connection").value.find("close") != std::string::npos) {
                     return shared_ptr<Pollable>();
                 }
 
