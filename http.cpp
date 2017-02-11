@@ -222,6 +222,12 @@ HttpRequest parse_request_frame(const HttpFrame& frame) {
     string method = parts[0];
     string uri = parts[1];
     string version = parts[2];
+
+    // ensure that the request uri starts with a leading /
+    if (uri == "" || uri[0] != '/') {
+        throw HttpRequestParseError("Malformed uri: '" + uri + "'");
+    }
+
     vector<HttpHeader> headers = parse_headers(header_lines);
 
     return HttpRequest{method, uri, version, headers, "", {0}};

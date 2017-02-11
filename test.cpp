@@ -395,6 +395,8 @@ void test_http_connection(TestRunner& runner) {
     shared_ptr<MockConnection> bad_header_mock_conn = make_shared<MockConnection>("GET / HTTP/1.1\r\nfoobar\r\n\r\n");
     HttpConnection bad_header_request_conn(bad_header_mock_conn);
     runner.assert_throws<HttpRequestParseError>([&](){ bad_header_request_conn.read_request(); }, "bad header connection");
+
+    runner.assert_throws<HttpRequestParseError>([](){ parse_request_frame(HttpFrame{"GET foo HTTP/1.1\r\nHost: baz\r\n\r\n"}); }, "uri without leading /");
 }
 
 void test_http_listener(TestRunner& runner) {
