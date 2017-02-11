@@ -186,6 +186,15 @@ class HttpServerTest(unittest.TestCase):
         resp = self.make_raw_request("GET HTTP/1.1\r\nHost: baz\r\n\r\n")
         self.assert_response(resp, STATUS_BAD_REQUEST, self.default_headers, b"")
 
+        resp = self.make_raw_request("GET / HTTP/1.1\r\n Host: baz\r\n\r\n")
+        self.assert_response(resp, STATUS_BAD_REQUEST, self.default_headers, b"")
+
+        resp = self.make_raw_request("GET / HTTP/1.1\r\nHost : baz\r\n\r\n")
+        self.assert_response(resp, STATUS_BAD_REQUEST, self.default_headers, b"")
+
+        resp = self.make_raw_request("GET / HTTP/1.1\r\n Host : baz\r\n\r\n")
+        self.assert_response(resp, STATUS_BAD_REQUEST, self.default_headers, b"")
+
         resp = self.make_raw_request("GET foo HTTP/1.1\r\nHost: baz\r\n\r\n")
         self.assert_response(resp, STATUS_BAD_REQUEST, self.default_headers, b"")
 
