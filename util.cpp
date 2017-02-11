@@ -151,15 +151,16 @@ system_clock::time_point to_time_point(time_t t) {
 }
 
 std::string to_http_date(const system_clock::time_point& tp) {
-    char buf[1024];
+    char buf[2048];
+    struct tm tm;
+
     time_t t = system_clock::to_time_t(tp);
-    // TODO not thread safe
-    struct tm tm = *gmtime(&t);
-    // TODO: check this return value?
-    strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
+    gmtime_r(&t, &tm);
+
+    size_t len = strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
 
     // check for and replace utc suffix
-    string s = string(buf);
+    string s = string(buf, len);
     if (ends_with(s, "UTC")) {
         s.replace(s.size() - strlen("UTC"), strlen("UTC"), "GMT");
     }
