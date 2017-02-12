@@ -5,6 +5,12 @@
 #include <memory>
 #include <string>
 
+
+/*
+ * File is an abstract class representing a unix file.
+ * It provides accessors for the properties necessary to implement FileServingHttpHandler.
+ * It is implemented below by PathFile and by MockFile in mocks.h
+ */
 class File {
 public:
     virtual ~File() {};
@@ -15,6 +21,14 @@ public:
 };
 
 
+/*
+ * FileRepository is an abstract class representing a repository of files. It provides
+ * an accessor for looking up files by a given path string. If no such file exists, it returns
+ * NULL.
+ * It is implemented below by DirectoryFileRepository and by MockFileRepository in mocks.h
+ * Other possible implementations include a client to a remote file store like S3, a large file store
+ * like HDFS, or an in memory caching layer wrapping another file store.
+ */
 class FileRepository {
 public:
     virtual ~FileRepository() {};
@@ -23,6 +37,10 @@ public:
 };
 
 
+/*
+ * PathFile implements File by performing OS file system operations on the file at
+ * the given file path.
+ */
 class PathFile : public File {
     std::string file_path;
 
@@ -35,6 +53,10 @@ public:
 };
 
 
+/*
+ * DirectoryFileRepository implements FileRepository by returning PathFiles with
+ * file paths constructed by concatenating the directory path and the given path.
+ */
 class DirectoryFileRepository : public FileRepository {
     std::string directory_path;
 

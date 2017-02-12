@@ -3,6 +3,15 @@
 
 #include <string>
 
+/*
+ * ThreadModel represents the different possible threading models used by the server.
+ * A positive value indicates a thread pool with that many threads in the pool.
+ * The constants declared below represent different models as follows:
+ * NO_POOL: a thread-per-connection model
+ * NO_THREADS: a blocking model that handles requests on the main thread
+ * ASYNC_EVENT_LOOP: an non-blocking model that handles requests on the
+ *                   main thread using asynchronous IO.
+ */
 typedef int ThreadModel;
 
 const ThreadModel ASYNC_EVENT_LOOP = -2;

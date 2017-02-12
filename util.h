@@ -8,6 +8,12 @@
 #include <sstream>
 #include <vector>
 
+/*
+ * This file contains miscellaneous utility functions used by other modules in the server.
+ * They are roughly organized by purpose, but are otherwise not related.
+ */
+
+
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
     os << "[";

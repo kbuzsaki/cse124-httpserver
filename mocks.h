@@ -12,6 +12,13 @@
 #include "server.h"
 
 
+/*
+ * MockConnection implements Connection with in memory string buffers to assist in testing.
+ * `read` is implemented by reading in specified chunk sizes from a preset buffer until
+ * the buffer is empty, after which additional calls will throw ConnectionClosed
+ * `write` is implemented by appending to an internal buffer.
+ * The written bytes can be inspected for verification using the `written` method.
+ */
 class MockConnection : public Connection {
     std::stringstream read_payload;
     std::stringstream write_payload;
@@ -35,6 +42,10 @@ public:
 };
 
 
+/*
+ * MockListener implements Listener by popping connections from an internal vector
+ * of preset Connections, and then throwing ListenerError when empty.
+ */
 class MockListener : public Listener {
     std::vector<std::shared_ptr<Connection>> connections;
 
@@ -48,6 +59,13 @@ public:
 };
 
 
+/*
+ * MockHttpRequestHandler implements HttpRequestHandler with preset HttpResponse and
+ * an in memory buffer of received requests.
+ * Calls to `handle_request` append the request to the internal buffer of requests and
+ * return the given response.
+ * Received requests can be inspected for verification using the `requests` method.
+ */
 class MockHttpRequestHandler : public HttpRequestHandler {
     HttpResponse response_payload;
     std::vector<HttpRequest> request_copies;
@@ -61,6 +79,9 @@ public:
 };
 
 
+/*
+ * MockFile implements File by returning the given preset values when accessed.
+ */
 class MockFile : public File {
     const bool world_readable_payload;
     const std::string contents_payload;
@@ -75,6 +96,10 @@ public:
 };
 
 
+/*
+ * MockFileRepository implements FileRepository with an in memory map from paths to Files.
+ * If a path is not present in its map, it returns NULL.
+ */
 class MockFileRepository : public FileRepository {
     const std::unordered_map<std::string, std::shared_ptr<File>> mock_files;
 
@@ -85,6 +110,10 @@ public:
 };
 
 
+/*
+ * MockDnsClient implements DnsClient with an in memory map from domain strings to vectors
+ * of in_addr structs. If the domain string is not present in the map, it returns empty vector.
+ */
 class MockDnsClient : public DnsClient {
     const std::unordered_map<std::string, std::vector<struct in_addr>> mock_results;
 
@@ -95,6 +124,13 @@ public:
 };
 
 
+/*
+ * MockRequestFilter implements RequestFilter with an in memory list of request, allow/deny pairs.
+ * If a request is not present in its list, defaults to true.
+ * The implementation uses a vector of pairs rather than a map because HttpRequest is a user defined
+ * type and I didn't want to go to the trouble of making HttpRequest hashable when this method is
+ * simpler and there's no apparent performance cost to the test suite.
+ */
 class MockRequestFilter : public RequestFilter {
     const std::vector<std::pair<HttpRequest, bool>> mock_results;
 

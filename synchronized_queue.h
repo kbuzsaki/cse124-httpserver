@@ -6,6 +6,14 @@
 #include <queue>
 
 
+/*
+ * SynchronizedQueue implements a templated thread-safe work queue.
+ * The internal queue is protected from concurrent access by a mutex.
+ * Calls to `push` acquire the mutex and add the element to the end of the queue.
+ * Calls to `pop` retrieve and remove the first element of the queue if one exists,
+ * or block the calling thread until an element is added.
+ * It is safe for multiple threads to call push and pop concurrently.
+ */
 template <typename T>
 class SynchronizedQueue {
     std::mutex lock;
