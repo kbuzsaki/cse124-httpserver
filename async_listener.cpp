@@ -73,6 +73,11 @@ int AsyncSocketListener::get_fd() {
 }
 
 
+/*
+ * AsyncSocketListenerPollable represents a non-blocking listen on the given
+ * AsyncSocketListener. When the socket listener is ready, it calls accept() and invokes its callback
+ * with the resulting connection.
+ */
 class AsyncSocketListenerPollable : public Pollable {
     shared_ptr<AsyncSocketListener> listener;
     Callback<shared_ptr<AsyncSocketConnection>>::F callback;

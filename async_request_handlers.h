@@ -12,6 +12,10 @@ public:
 };
 
 
+/*
+ * FileServingAsyncHttpRequestHandler handles incoming HttpRequests like FileServingHttpRequestHandler
+ * from request_handlers.h, but in a non-blocking manner.
+ */
 class FileServingAsyncHttpRequestHandler : public AsyncHttpRequestHandler {
     std::shared_ptr<AsyncFileRepository> repository;
 
@@ -22,6 +26,10 @@ public:
 };
 
 
+/*
+ * AsyncRequestFilterMiddleware filters incoming HttpRequests and delegates them to its delegate
+ * handler like RequestFilterMiddleware from request_handlers.h, but in a non-blocking manner.
+ */
 class AsyncRequestFilterMiddleware : public AsyncHttpRequestHandler {
     std::shared_ptr<AsyncRequestFilter> filter;
     std::shared_ptr<AsyncHttpRequestHandler> handler;

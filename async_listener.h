@@ -6,6 +6,14 @@
 #include "async_event_loop.h"
 
 
+/*
+ * AsyncSocketListener represents a non-blocking socket listener.
+ * A Pollable for the listener can be created using make_pollable below,
+ * which will invoke the given callback whenever a socket is ready.
+ *
+ * Note that AsyncSocketListner is not safe for concurrent access and uncoordinated
+ * concurrent access may caused blocking.
+ */
 class AsyncSocketListener {
     int sock;
 

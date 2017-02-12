@@ -7,6 +7,11 @@
 #include <memory>
 
 
+/*
+ * AsyncHttpRequestHandler is an abstract class that represents the minimal interface
+ * for asynchronously handling an http request.
+ * `handle_request` accepts an HttpRequest and a callback to invoke when the response is ready.
+ */
 class AsyncHttpRequestHandler {
 public:
     virtual ~AsyncHttpRequestHandler(){};
@@ -15,6 +20,11 @@ public:
 };
 
 
+/*
+ * AsyncHttpServer takes an AsyncSocketListener and AsyncHttpRequestHandler and creates
+ * and runs an AsyncEventLoop processing connections read from the AsyncSocketListener
+ * with the given AsyncHttpRequestHandler.
+ */
 class AsyncHttpServer {
     std::shared_ptr<AsyncSocketListener> listener;
     std::shared_ptr<AsyncHttpRequestHandler> handler;

@@ -37,6 +37,11 @@ AutoClosingSocket::~AutoClosingSocket() {
 }
 
 
+/*
+ * SocketReadPollable represents a pending non-blocking read operation on an AutoClosingSocket.
+ * It invokes the given callback once the read operation has completed.
+ * If the operation times out, it does not invoke the callback and removes itself from the event loop.
+ */
 class SocketReadPollable : public Pollable {
     shared_ptr<AutoClosingSocket> conn;
     Callback<string>::F callback;
@@ -95,6 +100,11 @@ public:
 };
 
 
+/*
+ * SocketWritePollable represents a pending non-blocking write operation on an AutoClosingSocket.
+ * It invokes the given callback once the write operation has completed.
+ * If the operation times out, it does not invoke the callback and removes itself from the event loop.
+ */
 class SocketWritePollable : public Pollable {
     shared_ptr<AutoClosingSocket> conn;
     Callback<>::F callback;

@@ -6,6 +6,12 @@
 #include "http.h"
 #include "async_connection.h"
 
+
+/*
+ * AsyncHttpConnection wraps an AsyncSocketConnection and provides non-blocking
+ * read_request and write_response methods that invoke their callbacks when
+ * the operation is complete.
+ */
 class AsyncHttpConnection {
     AsyncBufferedConnection conn;
 

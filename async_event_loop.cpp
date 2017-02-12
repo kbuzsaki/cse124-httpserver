@@ -73,6 +73,15 @@ void AsyncEventLoop::loop() {
 
         delete[] pollfds;
 
+        // This weird copying back and forth below serves two purposes:
+        // 1. it prunes all of the skipped file descriptors that are now past their deadlines.
+        // 2. it reorders the connections such that skipped descriptors are at the front of the list.
+        //   I found anecdotally that this helped to avoid starvation of descriptors at the end of the vector
+        //   I could have done this processing in the processing loop above using linked lists to perform the
+        //   same effect with fewer loops and still O(n) time, but I found that doing so made the code much
+        //   more convoluted so I decided to separate the behavior out. The resulting algorithm is still
+        //   O(n) + O(n) = O(n) and I haven't noticed any performance problems stemming from the additional
+        //   copies (it is just copying pointers), so I decided that it was sufficient.
         vector<shared_ptr<Pollable>> new_pollables;
 
         // check timeouts for every fd that was skipped

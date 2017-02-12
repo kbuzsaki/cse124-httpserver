@@ -19,6 +19,10 @@ using std::stringstream;
 const std::chrono::seconds DEFAULT_TIMEOUT = std::chrono::seconds(5);
 
 
+/*
+ * FileReadPollable represents a pending non-blocking read operation in the file system.
+ * It invokes its given callback once the data is ready.
+ */
 class FileReadPollable : public Pollable {
     int fd;
     Callback<string>::F callback;

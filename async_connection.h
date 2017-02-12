@@ -7,6 +7,10 @@
 #include <sstream>
 #include "async_event_loop.h"
 
+/*
+ * AutoClosingSocket wraps a socket and calls close on it in its destructor.
+ * The socket is a public member and there are no other convenience functions provided.
+ */
 struct AutoClosingSocket {
     int client_sock;
 
@@ -14,6 +18,13 @@ struct AutoClosingSocket {
     ~AutoClosingSocket();
 };
 
+/*
+ * AsyncSocketConnection represents a nonblocking bydirectional bytestream.
+ * `read` takes a callback to be invoked when data is ready and returns a Pollable
+ *        to be enqueued in the event loop
+ * `write` takes a string to write and a callback to invoke when the write is complete
+ *        and returns a Pollable to be enqueued in the event loop
+ */
 class AsyncSocketConnection {
     std::shared_ptr<AutoClosingSocket> conn;
     struct in_addr client_remote_ip;
@@ -29,6 +40,12 @@ public:
 };
 
 
+/*
+ * AsyncBufferedConnection provides a slightly higher level interface than AsyncSocketConnection,
+ * allowing read_until operations similar to BufferedConnection in connection.h
+ * As above, `read_until` and `write` take callbacks to be invoked when their operation is complete
+ * and return pollables to be enqueued in the event loop.
+ */
 class AsyncBufferedConnection {
     std::shared_ptr<AsyncSocketConnection> conn;
     std::shared_ptr<std::stringstream> buffer;
