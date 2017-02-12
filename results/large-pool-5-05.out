@@ -7,37 +7,37 @@ Benchmarking localhost (be patient)
 
 Server Software:        TritonHTTP/0.1
 Server Hostname:        localhost
-Server Port:            6065
+Server Port:            6062
 
-Document Path:          /meg.png
-Document Length:        1048576 bytes
+Document Path:          /ten_meg.png
+Document Length:        10485760 bytes
 
 Concurrency Level:      5
-Time taken for tests:   140.398 seconds
-Complete requests:      1000
+Time taken for tests:   59.856 seconds
+Complete requests:      200
 Failed requests:        0
 Write errors:           0
-Total transferred:      1048715000 bytes
-HTML transferred:       1048576000 bytes
-Requests per second:    7.12 [#/sec] (mean)
-Time per request:       701.989 [ms] (mean)
-Time per request:       140.398 [ms] (mean, across all concurrent requests)
-Transfer rate:          7294.53 [Kbytes/sec] received
+Total transferred:      2097180000 bytes
+HTML transferred:       2097152000 bytes
+Requests per second:    3.34 [#/sec] (mean)
+Time per request:       1496.405 [ms] (mean)
+Time per request:       299.281 [ms] (mean, across all concurrent requests)
+Transfer rate:          34215.80 [Kbytes/sec] received
 
 Connection Times (ms)
               min  mean[+/-sd] median   max
-Connect:        0    0   0.0      0       0
-Processing:   514  699  41.8    703     904
-Waiting:      470  686  40.6    689     901
-Total:        514  699  41.8    703     904
+Connect:        0    0   0.4      0       6
+Processing:  1115 1463 267.0   1409    2268
+Waiting:     1098 1444 265.4   1386    2245
+Total:       1115 1464 267.0   1409    2268
 
 Percentage of the requests served within a certain time (ms)
-  50%    703
-  66%    710
-  75%    719
-  80%    726
-  90%    745
-  95%    759
-  98%    782
-  99%    804
- 100%    904 (longest request)
+  50%   1409
+  66%   1532
+  75%   1624
+  80%   1693
+  90%   1843
+  95%   2027
+  98%   2235
+  99%   2255
+ 100%   2268 (longest request)
