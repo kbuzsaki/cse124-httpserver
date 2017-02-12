@@ -2,42 +2,42 @@ This is ApacheBench, Version 2.3 <$Revision: 655654 $>
 Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
 Licensed to The Apache Software Foundation, http://www.apache.org/
 
-Benchmarking localhost (be patient).....done
+Benchmarking localhost (be patient)
 
 
 Server Software:        TritonHTTP/0.1
 Server Hostname:        localhost
-Server Port:            6063
+Server Port:            6065
 
 Document Path:          /meg.png
 Document Length:        1048576 bytes
 
 Concurrency Level:      5
-Time taken for tests:   3.318 seconds
-Complete requests:      100
+Time taken for tests:   140.398 seconds
+Complete requests:      1000
 Failed requests:        0
 Write errors:           0
-Total transferred:      104871500 bytes
-HTML transferred:       104857600 bytes
-Requests per second:    30.14 [#/sec] (mean)
-Time per request:       165.913 [ms] (mean)
-Time per request:       33.183 [ms] (mean, across all concurrent requests)
-Transfer rate:          30863.71 [Kbytes/sec] received
+Total transferred:      1048715000 bytes
+HTML transferred:       1048576000 bytes
+Requests per second:    7.12 [#/sec] (mean)
+Time per request:       701.989 [ms] (mean)
+Time per request:       140.398 [ms] (mean, across all concurrent requests)
+Transfer rate:          7294.53 [Kbytes/sec] received
 
 Connection Times (ms)
               min  mean[+/-sd] median   max
-Connect:        0    0   0.1      0       1
-Processing:   116  158  30.4    155     233
-Waiting:      114  155  29.9    151     231
-Total:        116  158  30.4    155     233
+Connect:        0    0   0.0      0       0
+Processing:   514  699  41.8    703     904
+Waiting:      470  686  40.6    689     901
+Total:        514  699  41.8    703     904
 
 Percentage of the requests served within a certain time (ms)
-  50%    155
-  66%    171
-  75%    184
-  80%    188
-  90%    200
-  95%    218
-  98%    228
-  99%    233
- 100%    233 (longest request)
+  50%    703
+  66%    710
+  75%    719
+  80%    726
+  90%    745
+  95%    759
+  98%    782
+  99%    804
+ 100%    904 (longest request)

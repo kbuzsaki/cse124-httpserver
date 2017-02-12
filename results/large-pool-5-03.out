@@ -2,42 +2,42 @@ This is ApacheBench, Version 2.3 <$Revision: 655654 $>
 Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
 Licensed to The Apache Software Foundation, http://www.apache.org/
 
-Benchmarking localhost (be patient).....done
+Benchmarking localhost (be patient)
 
 
 Server Software:        TritonHTTP/0.1
 Server Hostname:        localhost
-Server Port:            6063
+Server Port:            6065
 
 Document Path:          /meg.png
 Document Length:        1048576 bytes
 
 Concurrency Level:      3
-Time taken for tests:   4.201 seconds
-Complete requests:      100
+Time taken for tests:   179.533 seconds
+Complete requests:      1000
 Failed requests:        0
 Write errors:           0
-Total transferred:      104871500 bytes
-HTML transferred:       104857600 bytes
-Requests per second:    23.80 [#/sec] (mean)
-Time per request:       126.044 [ms] (mean)
-Time per request:       42.015 [ms] (mean, across all concurrent requests)
-Transfer rate:          24375.76 [Kbytes/sec] received
+Total transferred:      1048715000 bytes
+HTML transferred:       1048576000 bytes
+Requests per second:    5.57 [#/sec] (mean)
+Time per request:       538.600 [ms] (mean)
+Time per request:       179.533 [ms] (mean, across all concurrent requests)
+Transfer rate:          5704.44 [Kbytes/sec] received
 
 Connection Times (ms)
               min  mean[+/-sd] median   max
 Connect:        0    0   0.0      0       0
-Processing:   114  122   8.4    120     169
-Waiting:      113  120   8.4    118     167
-Total:        114  122   8.4    120     169
+Processing:   113  538 171.7    596     770
+Waiting:      112  528 168.6    585     767
+Total:        113  538 171.7    596     770
 
 Percentage of the requests served within a certain time (ms)
-  50%    120
-  66%    121
-  75%    123
-  80%    124
-  90%    128
-  95%    140
-  98%    153
-  99%    169
- 100%    169 (longest request)
+  50%    596
+  66%    617
+  75%    629
+  80%    636
+  90%    657
+  95%    671
+  98%    695
+  99%    705
+ 100%    770 (longest request)
