@@ -1,0 +1,77 @@
+# Experimental Results for Extension 3
+
+Kyle Buzsaki
+A11462453
+
+
+## Methodology
+
+I used the following commands for benchmarking:
+
+    ab -n 1000 -c $conc -H 'Connection: close' localhost:6060/foo.html
+    ab -n 1000 -c $conc -H 'Connection: close' localhost:6060/meg.png
+
+Where $conc is the concurrency level of 2, 3, 4, 5, 10, or 20. The foo.html 
+file is 37 bytes in size. The meg.png file is 1 megabyte in size.
+
+The servers were run with the following commands:
+
+    ./httpd 6060 itest_files nopool
+    ./httpd 6060 itest_files pool 5
+
+The output of the ab command can be found in the results directory.
+
+
+## Results
+
+See the result files in the results directory of the repository.
+See the aggregated and charted results in this google spreadsheet:
+https://docs.google.com/spreadsheets/d/1QV3yLazswKzvgaDeHi7DN3E0Itsd8MGcl97Fj5_uHNQ/edit?usp=sharing
+
+
+Q1. Does the latency of a small request vary between the two threading models
+for pools of size 5 when evaluated at concurrency levels of {2,3,4,5}?
+
+A: The median response times for both models are 2, 3, 4, and 5 milliseconds
+respectively. However, the 99th percentile response times for the nopool model
+are generally a few milliseconds higher than the 99th percentile reponse times
+for the pool model. This makes sense to me because nopool model has to make
+an additional system call to spawn the thread that could cause additional delays.
+Furthermore, the pooled model has a smaller standard deviation than the
+no pool model. This makes sense for the same reason.
+
+
+Q2. Does the throughput of large requests vary between the two threading models
+for pools of size 5 when evalutaed at concurrency levels of {2,3,4,5}?
+
+A: Both models grow in throughput as the concurrency grows. The thread pool model
+stops increasing in performance at a concurrency level of 5, as expected. Even at
+these lower concurrency values, the thread pool model is substantially slower than 
+the thread per connection model. This was unexpected because the two models should
+have the same number of threads active at the same time. I experimented by running
+the same performance tests again with a smaller thread pool and found that performance
+of the thread pool model improved. For that reason, I suspect that there is a bottleneck
+with my thread pool design where having too many active threads in the pool will starve
+the main thread from being able to populate their work queue.
+
+
+Q3. Does the latency of a small request vary between the two threading models
+for pools of size 5 when evaluated at concurrency levels of {10,20}?
+
+A: Again, the pooled model beats the nopool model in terms of 99th percentile times
+and standard deviation. This makes sense for the same reason: the thread-per-connection
+model has to do additional work to create new threads that may cause unexpected delays.
+The median times are again similar.
+
+
+Q4. Does the throughput of large requests vary between the two threading models
+for pools of size 5 when evalutaed at concurrency levels of {10,20}?
+
+A: The thread per connection model is substantially more performant here than
+the threaded model. Unlike in the small request case, the majority of the time here
+is spent in IO wait either reading from the file system or sending on the client socket.
+This is much larger than the potential extra time taken to spawn an additional thread.
+Furthermore, because the majority of a thread's time is spent in IO wait rather than
+doing computation, the 10 or 20 threads spawned by the thread per connection model can
+all be "doing work" at the same time, instead of contending for the CPU as they would
+in a high compute case.
