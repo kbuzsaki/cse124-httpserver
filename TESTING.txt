@@ -1,0 +1,75 @@
+# Project 1 Testing Strategy
+
+Kyle Buzsaki
+A11462453
+
+## Unit Tests
+
+My automated unit tests are in the test.cpp file. The tests can be run with 'make test'.
+I wrote a simple test running framework to assist with writing tests. It has several
+assertion methods for asserting equality, truth value, and whether a given expression
+throws an exception. It also keeps track of passes, failures, and failure messages and
+prints them at the end.
+
+Individual functions are tested in test_$name_of_function functions. They are made up
+of repeated invocations of the function followed by an assertion with the test runner.
+I use this strategy for simple functions that just have input and output.
+
+For complex components of the code or pieces of code with side effects, I use a strategy
+of abstract interfaces and mocking. The different components of my code are encapsulated
+behind abstract interfaces that have multiple underlying implementations, including a
+mock implementation that satisfies the same interface but fakes behavior using simple
+in-memory data structures and preset values. This lets me instantiate complex pieces
+individually with mock components and test their logic.
+
+For example, my FileServingHttpHandler takes a FileRepository interface. In the regular
+code path, this is set an instance of DirectoryFileRepository, which actually accesses
+the file system. In my unit tests for the FileServingHttpHandler, I instead give it an
+instance of MockFileRepository which has manufactured file data stored in an in-memory
+map. In this way, much of my server's internal logic can be tested in isolation without
+having to access external systems like the network or file system.
+
+Another frequently used mock is the MockConnection class, which pretends to be a TCP 
+connection but actually just has a preset buffer of bytes that it returns in intervals
+when requested and a second buffer keeping track of all of the bytes sent to it. 
+this MockConnection class let me verify that my code properly handled cases where the
+http request is split across multiple receive calls without having to write a "driver"
+program to sleep in between sends. I just made my MockConnection class return different
+chunk sizes of data at a time and asserted that everything behaved correctly.
+
+
+## Integration Tests
+
+My end-to-end or "integration tests" are in the integration_test.py file. I used python3,
+the python standard library unittest module, and the PyPI requests package assert round-trip
+behavior for my server. The integration tests can be run with 'make itest', but some of them
+are specific to my development machine and will not run properly otherwise. This is because
+I hardcoded my home LAN ip address for doing htaccess testing.
+
+The integration test script starts the httpd server as a child process on port 6060 and with
+the included itest_files/ directory as the document root. It then makes a variety of valid
+and invalid requests, comparing the responses with expected values and the actual contents
+of the itest_files directory.
+
+This strategy of integration testing is necessary to verify full correctness because my
+unit tests do not test "system boundary" behavior like the real network or file system.
+I'm able to make sure that response headers and body for 200 responses match the actual
+data on the file system. I'm also able to make sure that my server properly closes the
+connection when sending bad request responses instead of just timing out.
+
+
+## Manual Tests
+
+I tried to avoid manual testing where possible because they're less convenient to run
+repeatedly than automated tests. During initial development before I had a functional
+server I relied primarily on my automated tests for the different units of code that I was
+writing. After I was able to server simple requests I did basic testing with curl, telnet,
+and my web browser. I used curl -v to visually verify the headers that my server was responding
+with and to make sure that my integration tests were properly catching errors there.
+I used telnet to test various invalid requests, but where possible I put these in my integration
+tests. I also used telnet to verify that my threadpool model is only able to serve at most
+the number of threads at a time in requests.
+
+Finally, I used my web browser to verify that my server was responding such that the web
+browser could properly interpret the content.
+
